@@ -1,0 +1,304 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ————— Accounts & sessions —————
+
+model User {
+  id              Int       @id @default(autoincrement())
+  username        String    @unique
+  email           String?   @unique // nullable in DB (pre-migration accounts), required at signup
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  language        String    @default("en") // UI/email/push language: "fr" | "en"
+  // Set manually in SQL only — no promotion UI, on purpose.
+  isAdmin         Boolean   @default(false) @map("is_admin")
+  // "Verify your email" reminder sent one day before lockout (keeps the daily job from sending duplicates).
+  verifyReminderSentAt DateTime? @map("verify_reminder_sent_at")
+  passwordHash    String    @map("password_hash")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  authTokens AuthToken[]
+
+  sessions      Session[]
+  follows       Follow[]
+  watchEvents   WatchEvent[]
+  movieWatchlist MovieWatchlistEntry[]
+  ratings       Rating[]
+  pushSubscriptions PushSubscription[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String    @id // opaque token (random 256 bits, hex)
+  userId    Int       @map("user_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  // Touched at most once a minute per session — powers "online now".
+  lastUsedAt DateTime? @map("last_used_at")
+  expiresAt DateTime  @map("expires_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+enum AuthTokenKind {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
+// Single-use tokens sent by email (address verification, password reset).
+model AuthToken {
+  id        String        @id // sha256 of the token sent by email
+  userId    Int           @map("user_id")
+  kind      AuthTokenKind
+  expiresAt DateTime      @map("expires_at")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind])
+  @@map("auth_tokens")
+}
+
+// One Web Push subscription per device/browser.
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+// Instance settings editable from the admin console. Environment variables
+// with the same names take precedence (12-factor style overrides).
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+// ————— TMDB metadata cache (shared across users) —————
+
+model Show {
+  tmdbId       Int       @id @map("tmdb_id")
+  tvdbId       Int?      @unique @map("tvdb_id") // TV Time import mapping
+  name         String
+  posterPath   String?   @map("poster_path")
+  backdropPath String?   @map("backdrop_path")
+  overview     String?
+  genres       String[]  // TMDB labels, good enough for stats
+  status       String? // Returning Series / Ended / Canceled…
+  network      String? // main platform/network (calendar badge)
+  firstAirYear Int?      @map("first_air_year")
+  cachedAt     DateTime  @default(now()) @map("cached_at")
+
+  episodes     Episode[]
+  follows      Follow[]
+  translations ShowTranslation[]
+
+  @@map("shows")
+}
+
+model Episode {
+  id         Int       @id @default(autoincrement())
+  showTmdbId Int       @map("show_tmdb_id")
+  tmdbId     Int?      @unique @map("tmdb_id")
+  season     Int
+  number     Int
+  name       String?
+  airDate    DateTime? @map("air_date") @db.Date
+  runtime    Int? // minutes
+
+  show         Show                 @relation(fields: [showTmdbId], references: [tmdbId], onDelete: Cascade)
+  watchEvents  WatchEvent[]
+  translations EpisodeTranslation[]
+
+  @@unique([showTmdbId, season, number])
+  @@map("episodes")
+}
+
+model Movie {
+  tmdbId       Int       @id @map("tmdb_id")
+  title        String
+  posterPath   String?   @map("poster_path")
+  backdropPath String?   @map("backdrop_path")
+  overview     String?
+  genres       String[]
+  releaseDate  DateTime? @map("release_date") @db.Date
+  runtime      Int? // minutes
+  cachedAt     DateTime  @default(now()) @map("cached_at")
+
+  watchEvents      WatchEvent[]
+  watchlistEntries MovieWatchlistEntry[]
+  translations     MovieTranslation[]
+
+  @@map("movies")
+}
+
+// Localized metadata, one row per (entity, lang). The base tables keep the
+// instance-language copy as fallback; these override per profile language.
+model ShowTranslation {
+  showTmdbId Int      @map("show_tmdb_id")
+  lang       String // "fr" | "en"
+  name       String
+  overview   String?
+  genres     String[]
+
+  show Show @relation(fields: [showTmdbId], references: [tmdbId], onDelete: Cascade)
+
+  @@id([showTmdbId, lang])
+  @@map("show_translations")
+}
+
+model EpisodeTranslation {
+  episodeId Int    @map("episode_id")
+  lang      String
+  name      String?
+
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@id([episodeId, lang])
+  @@map("episode_translations")
+}
+
+model MovieTranslation {
+  movieTmdbId Int      @map("movie_tmdb_id")
+  lang        String
+  title       String
+  overview    String?
+  genres      String[]
+
+  movie Movie @relation(fields: [movieTmdbId], references: [tmdbId], onDelete: Cascade)
+
+  @@id([movieTmdbId, lang])
+  @@map("movie_translations")
+}
+
+// ————— Per-user tracking —————
+
+enum FollowState {
+  WATCHING
+  ARCHIVED
+  FOR_LATER
+}
+
+model Follow {
+  userId     Int         @map("user_id")
+  showTmdbId Int         @map("show_tmdb_id")
+  state      FollowState @default(WATCHING)
+  isFavorite Boolean     @default(false) @map("is_favorite")
+  followedAt DateTime    @default(now()) @map("followed_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  show Show @relation(fields: [showTmdbId], references: [tmdbId])
+
+  @@id([userId, showTmdbId])
+  @@map("follows")
+}
+
+// One row per viewing (rewatch = multiple rows). Source of truth for stats.
+model WatchEvent {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  episodeId Int?     @map("episode_id")
+  movieId   Int?     @map("movie_id")
+  watchedAt DateTime @map("watched_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode Episode? @relation(fields: [episodeId], references: [id])
+  movie   Movie?   @relation(fields: [movieId], references: [tmdbId])
+
+  // Import idempotency: replayable without creating duplicates.
+  @@unique([userId, episodeId, watchedAt])
+  @@unique([userId, movieId, watchedAt])
+  @@index([userId, watchedAt])
+  @@map("watch_events")
+}
+
+model MovieWatchlistEntry {
+  userId     Int      @map("user_id")
+  movieTmdbId Int     @map("movie_tmdb_id")
+  addedAt    DateTime @default(now()) @map("added_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie Movie @relation(fields: [movieTmdbId], references: [tmdbId])
+
+  @@id([userId, movieTmdbId])
+  @@map("movie_watchlist")
+}
+
+// ————— TV Time import —————
+
+enum ImportJobStatus {
+  RUNNING
+  DONE
+  FAILED
+}
+
+model ImportJob {
+  id        Int             @id @default(autoincrement())
+  userId    Int             @map("user_id")
+  status    ImportJobStatus @default(RUNNING)
+  progress  Json? // { phase, done, total }
+  report    Json? // final counters
+  error     String?
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("import_jobs")
+}
+
+enum PendingMovieKind {
+  WATCHED
+  WATCHLIST
+}
+
+// Movies from the export without a confident TMDB match — resolved manually by the user.
+model ImportPendingMovie {
+  id         Int              @id @default(autoincrement())
+  userId     Int              @map("user_id")
+  title      String // raw title from the TV Time export
+  kind       PendingMovieKind
+  watchedAts DateTime[]       @map("watched_ats") // watch dates (kind WATCHED)
+  candidates Json // [{ tmdbId, title, year, posterPath }]
+  createdAt  DateTime         @default(now()) @map("created_at")
+
+  @@unique([userId, title, kind])
+  @@index([userId])
+  @@map("import_pending_movies")
+}
+
+enum RatingTarget {
+  SHOW
+  MOVIE
+  EPISODE
+}
+
+model Rating {
+  userId    Int          @map("user_id")
+  target    RatingTarget
+  targetRef Int          @map("target_ref") // tmdbId (show/movie) or episodes.id
+  value     Int // 1-10
+  ratedAt   DateTime     @default(now()) @map("rated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, target, targetRef])
+  @@map("ratings")
+}

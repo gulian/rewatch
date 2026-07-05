@@ -1,0 +1,10 @@
+# Never bake local secrets or build artifacts into the image
+**/.env
+**/node_modules
+**/dist
+**/dev-dist
+backend/src/generated
+.git
+.github
+docs
+*.md

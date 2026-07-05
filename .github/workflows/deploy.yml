@@ -1,0 +1,39 @@
+# Production deploy: every push to master triggers a deploy service on the
+# host over SSH. Server-side, the key is restricted (authorized_keys command=)
+# to a single trigger script, so this workflow cannot run anything else.
+#
+# Required repository secrets (deploys are skipped when they are absent,
+# so forks are unaffected):
+#   DEPLOY_HOST         hostname of the production server
+#   DEPLOY_USER         SSH user
+#   DEPLOY_SSH_KEY      private key restricted to the trigger command
+#   DEPLOY_KNOWN_HOSTS  ssh-keyscan output for the host (host key pinning)
+name: deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: prod-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ vars.DEPLOY_ENABLED == 'true' }}
+    steps:
+      - name: Trigger deploy
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # The forced command on the server runs the actual deploy.
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST"

@@ -1,0 +1,129 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/outfit';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/700.css';
+
+/* Tokens from the approved design (design/Rewatch.dc.html). */
+@theme {
+  --font-sans: 'Outfit Variable', system-ui, sans-serif;
+  --color-bg: #07090f;
+  --color-surface: #0d1322;
+  --color-card: #172033;
+  --color-track: #232f49;
+  --color-navbg: #0a0f1c;
+  --color-userbg: #131b2d;
+  --color-accent: #ffc94b;
+  --color-ink: #22190a;
+  --color-text: #edf1fa;
+  --color-soft: #b9c2d4;
+  --color-muted: #8c96ac;
+  --color-dim: #5e6883;
+  --color-fade: #4a5570;
+  --color-navmut: #6b7690;
+  --color-border: #2a3652;
+  --color-border2: #3a4560;
+  --color-star-off: #3a4560;
+  --color-danger: #e06a5a;
+  --color-warn: #e0a85a;
+  --color-green: #3fa98e;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  /* No blue tap flash (Android) */
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  /* Native-app feel: no text selection, no long-press menu */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  /* No pull-to-refresh or edge bounce */
+  overscroll-behavior-y: none;
+  /* Removes the double-tap-to-zoom delay */
+  touch-action: manipulation;
+}
+
+/* Input fields stay selectable/copyable */
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* No ghost drag on posters */
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+/* No visible scrollbar (scrolling still works) */
+* {
+  scrollbar-width: none; /* Firefox */
+}
+*::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge */
+}
+
+/* Page transitions (View Transitions API — no-op on unsupported browsers) */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-out 140ms ease both;
+  }
+  ::view-transition-new(root) {
+    animation: vt-in 190ms ease both;
+  }
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Subtle separator line used throughout the design. */
+@utility border-line {
+  border-color: rgb(255 255 255 / 0.06);
+}
+
+/* Ops console (admin) — deliberately separate visual world: neutral carbon,
+   sharp corners, hairlines, mono numerals, single phosphor accent. */
+.ops {
+  --ops-bg: #0b0d0e;
+  --ops-panel: #101314;
+  --ops-line: rgb(255 255 255 / 0.08);
+  --ops-text: #e8eae7;
+  --ops-muted: #8b9389;
+  --ops-dim: #565e56;
+  --ops-accent: #52d99f;
+  --ops-warn: #d9a441;
+  --ops-danger: #d96c57;
+  background: var(--ops-bg);
+  color: var(--ops-text);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ops-live {
+    animation: ops-pulse 2s ease-in-out infinite;
+  }
+}
+@keyframes ops-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}

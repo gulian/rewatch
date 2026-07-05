@@ -1,0 +1,45 @@
+# One-command setup — no configuration files needed:
+#
+#   curl -fsSL https://raw.githubusercontent.com/gulian/rewatch/master/docker-compose.yml -o docker-compose.yml
+#   docker compose up -d
+#
+# Then open http://localhost:3020: the first account you create is the
+# administrator, and a setup wizard walks you through the rest (TMDB key,
+# public URL, email, push keys). Put an HTTPS reverse proxy in front for
+# PWA installation and push notifications.
+#
+# Daily job (release push notifications, verification reminders) — schedule
+# once a day with cron on the host:
+#   docker compose exec app node dist/jobs/daily.js
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rewatch
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rewatch}
+      POSTGRES_DB: rewatch
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U rewatch']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    image: ghcr.io/gulian/rewatch:latest
+    # To build from source instead:
+    # build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://rewatch:${POSTGRES_PASSWORD:-rewatch}@db:5432/rewatch
+    ports:
+      - '3020:3020'
+
+volumes:
+  pgdata:

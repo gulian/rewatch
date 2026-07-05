@@ -1,0 +1,6 @@
+node_modules/
+dist/
+dev-dist/
+.env
+*.log
+backend/src/generated/
