@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { Trans, useTranslation } from 'react-i18next'
 import { api, ApiError } from '../api/client'
-import { useImportJob, useLibrary, useMe, usePending, useStats } from '../api/hooks'
+import { useImportJob, useLegalInfo, useLibrary, useMe, usePending, useStats } from '../api/hooks'
 import { ScreenTitle, Spinner } from '../components/ui'
 import { getCurrentSubscription, pushSupported, subscribeToPush, unsubscribeFromPush } from '../lib/push'
 
@@ -520,6 +520,7 @@ export default function Profile() {
   const { data: me } = useMe()
   const { data: stats } = useStats()
   const { data: library } = useLibrary()
+  const { data: legalInfo } = useLegalInfo()
   const [showPassword, setShowPassword] = useState(false)
   const [showEmail, setShowEmail] = useState(false)
   const [showPurge, setShowPurge] = useState(false)
@@ -725,9 +726,11 @@ export default function Profile() {
           <div className="text-dim text-[12px] font-semibold">
             Made with <span className="text-accent">♥</span> by gulian
           </div>
-          <Link viewTransition to="/legal" className="text-dim text-[11px] font-semibold underline underline-offset-2">
-            {t('profile.legalLink')}
-          </Link>
+          {(legalInfo?.host || legalInfo?.contact) && (
+            <Link viewTransition to="/legal" className="text-dim text-[11px] font-semibold underline underline-offset-2">
+              {t('profile.legalLink')}
+            </Link>
+          )}
           <a
             href="https://www.themoviedb.org/"
             target="_blank"

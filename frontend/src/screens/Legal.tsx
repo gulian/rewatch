@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { api } from '../api/client'
+import { useLegalInfo } from '../api/hooks'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -16,11 +15,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function Legal() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { data: info } = useQuery({
-    queryKey: ['legal-info'],
-    queryFn: () => api.get<{ host: string | null; contact: string | null }>('/api/legal-info'),
-    staleTime: Infinity,
-  })
+  const { data: info } = useLegalInfo()
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col">

@@ -326,9 +326,9 @@
     "wizDone": "Instance configurée. Bon visionnage.",
     "wizOpenApp": "Ouvrir l'app",
     "legalHost": "Hébergeur",
-    "legalHostHint": "affiché sur la page légale",
+    "legalHostHint": "vide = page légale masquée",
     "legalContact": "Contact opérateur",
-    "legalContactHint": "affiché sur la page légale"
+    "legalContactHint": "vide = page légale masquée"
   },
   "tvhelp": {
     "title": "Récupérer ses données TV Time",

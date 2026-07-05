@@ -326,9 +326,9 @@
     "wizDone": "Instance configured. Happy watching.",
     "wizOpenApp": "Open the app",
     "legalHost": "Hosting provider",
-    "legalHostHint": "shown on the legal page",
+    "legalHostHint": "leave empty to hide the legal page",
     "legalContact": "Operator contact",
-    "legalContactHint": "shown on the legal page"
+    "legalContactHint": "leave empty to hide the legal page"
   },
   "tvhelp": {
     "title": "Get your TV Time data",

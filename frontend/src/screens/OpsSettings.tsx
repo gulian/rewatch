@@ -133,7 +133,7 @@ function TmdbFields({ form }: { form: ReturnType<typeof useSettingsForm> }) {
   )
 }
 
-function InstanceFields({ form }: { form: ReturnType<typeof useSettingsForm> }) {
+function InstanceFields({ form, withLegal }: { form: ReturnType<typeof useSettingsForm>; withLegal?: boolean }) {
   const { t } = useTranslation()
   const reg = (form.shown('REGISTRATION_ENABLED') || 'true') !== 'false'
   return (
@@ -156,6 +156,8 @@ function InstanceFields({ form }: { form: ReturnType<typeof useSettingsForm> }) 
           onChange={(v) => form.edit('REGISTRATION_ENABLED', String(v))}
         />
       </div>
+      {withLegal && (
+      <>
       <div>
         <Label text={t('ops.legalHost')} hint={t('ops.legalHostHint')} />
         <input
@@ -176,6 +178,8 @@ function InstanceFields({ form }: { form: ReturnType<typeof useSettingsForm> }) 
           onChange={(e) => form.edit('LEGAL_CONTACT', e.target.value)}
         />
       </div>
+      </>
+      )}
     </div>
   )
 }
@@ -294,7 +298,7 @@ export function SettingsPanel() {
 
   const groups: [string, React.ReactNode][] = [
     [t('ops.groupMetadata'), <TmdbFields key="t" form={form} />],
-    [t('ops.groupInstance'), <InstanceFields key="i" form={form} />],
+    [t('ops.groupInstance'), <InstanceFields key="i" form={form} withLegal />],
     [t('ops.groupEmail'), <EmailFields key="e" form={form} />],
     [t('ops.groupPush'), <PushFields key="p" form={form} />],
   ]
@@ -340,7 +344,7 @@ export function Setup() {
   const steps: { title: string; text: string; body?: React.ReactNode; canSkip: boolean; keys: string[] }[] = [
     { title: t('ops.wizWelcomeTitle'), text: t('ops.wizWelcomeText'), canSkip: false, keys: [] },
     { title: t('ops.groupMetadata'), text: t('ops.wizStepTmdb'), body: <TmdbFields form={form} />, canSkip: false, keys: ['TMDB_API_TOKEN', 'TMDB_LANGUAGE'] },
-    { title: t('ops.groupInstance'), text: t('ops.wizStepInstance'), body: <InstanceFields form={form} />, canSkip: false, keys: ['APP_URL', 'REGISTRATION_ENABLED', 'LEGAL_HOST', 'LEGAL_CONTACT'] },
+    { title: t('ops.groupInstance'), text: t('ops.wizStepInstance'), body: <InstanceFields form={form} />, canSkip: false, keys: ['APP_URL', 'REGISTRATION_ENABLED'] },
     { title: t('ops.groupEmail'), text: t('ops.wizStepEmail'), body: <EmailFields form={form} />, canSkip: true, keys: ['SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_USER', 'SMTP_PASS', 'MAIL_FROM'] },
     { title: t('ops.groupPush'), text: t('ops.wizStepPush'), body: <PushFields form={form} />, canSkip: true, keys: ['VAPID_SUBJECT'] },
     { title: t('ops.wizDone'), text: '', canSkip: false, keys: [] },

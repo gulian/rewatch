@@ -79,6 +79,15 @@ export const useSetupStatus = () =>
     staleTime: 60_000,
   })
 
+// Home instances leave both fields empty: the legal page and its links
+// only exist once the operator fills them in.
+export const useLegalInfo = () =>
+  useQuery({
+    queryKey: ['legal-info'],
+    queryFn: () => api.get<{ host: string | null; contact: string | null }>('/api/legal-info'),
+    staleTime: Infinity,
+  })
+
 export const useAdminSettings = () =>
   useQuery({ queryKey: ['admin-settings'], queryFn: () => api.get<AdminSetting[]>('/api/admin/settings') })
 

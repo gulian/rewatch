@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { api, ApiError } from '../api/client'
+import { useLegalInfo } from '../api/hooks'
 import { browserLang } from '../i18n'
 
 type Mode = 'login' | 'register' | 'forgot'
@@ -12,6 +13,7 @@ const inputClass =
 
 export default function Login() {
   const { t } = useTranslation()
+  const { data: legalInfo } = useLegalInfo()
   const [mode, setMode] = useState<Mode>('login')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -179,10 +181,14 @@ export default function Login() {
         <a href="https://github.com/gulian/rewatch" target="_blank" rel="noreferrer">
           Open source · GitHub
         </a>
-        <span>·</span>
-        <Link viewTransition to="/legal">
-          {t('legal.title')}
-        </Link>
+        {(legalInfo?.host || legalInfo?.contact) && (
+          <>
+            <span>·</span>
+            <Link viewTransition to="/legal">
+              {t('legal.title')}
+            </Link>
+          </>
+        )}
       </div>
     </div>
   )
