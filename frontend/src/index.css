@@ -4,33 +4,94 @@
 @import '@fontsource/jetbrains-mono/500.css';
 @import '@fontsource/jetbrains-mono/700.css';
 
-/* Tokens from the approved design (design/Rewatch.dc.html). */
-@theme {
-  --font-sans: 'Outfit Variable', system-ui, sans-serif;
-  --color-bg: #07090f;
-  --color-surface: #0d1322;
-  --color-card: #172033;
-  --color-track: #232f49;
-  --color-navbg: #0a0f1c;
-  --color-userbg: #131b2d;
-  --color-accent: #ffc94b;
-  --color-ink: #22190a;
-  --color-text: #edf1fa;
-  --color-soft: #b9c2d4;
-  --color-muted: #8c96ac;
-  --color-dim: #5e6883;
-  --color-fade: #4a5570;
-  --color-navmut: #6b7690;
-  --color-border: #2a3652;
-  --color-border2: #3a4560;
-  --color-star-off: #3a4560;
-  --color-danger: #e06a5a;
-  --color-warn: #e0a85a;
-  --color-green: #3fa98e;
-}
-
+/* Dark tokens from the approved design (design/Rewatch.dc.html); the light
+   theme ("warm paper") swaps the raw variables and every utility follows. */
 :root {
   color-scheme: dark;
+  --t-bg: #07090f;
+  --t-surface: #0d1322;
+  --t-card: #172033;
+  --t-track: #232f49;
+  --t-navbg: #0a0f1c;
+  --t-userbg: #131b2d;
+  --t-accent: #ffc94b;
+  --t-ink: #22190a;
+  --t-text: #edf1fa;
+  --t-soft: #b9c2d4;
+  --t-muted: #8c96ac;
+  --t-dim: #5e6883;
+  --t-fade: #4a5570;
+  --t-navmut: #6b7690;
+  --t-border: #2a3652;
+  --t-border2: #3a4560;
+  --t-star-off: #3a4560;
+  --t-danger: #e06a5a;
+  --t-warn: #e0a85a;
+  --t-green: #3fa98e;
+  --t-hairline: rgba(255, 255, 255, 0.05); /* the border-white/5 row separators */
+  --t-nav-glass: rgba(13, 19, 34, 0.55);
+  --t-nav-glass-lens: rgba(13, 19, 34, 0.38);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --t-bg: #f5f3ed;
+  --t-surface: #fdfcf8;
+  --t-card: #ffffff;
+  --t-track: #e8e3d7;
+  --t-navbg: #f8f6f0;
+  --t-userbg: #efece2;
+  --t-accent: #ffc94b;
+  --t-ink: #22190a;
+  --t-text: #1c2333;
+  --t-soft: #4a5468;
+  --t-muted: #6b7488;
+  --t-dim: #9aa2b2;
+  --t-fade: #b3bac6;
+  --t-navmut: #8a92a4;
+  --t-border: #e3ddcf;
+  --t-border2: #d5cebc;
+  --t-star-off: #d5cebc;
+  --t-danger: #c44b38;
+  --t-warn: #b07d10;
+  --t-green: #2e8a72;
+  --t-hairline: rgba(28, 35, 51, 0.07);
+  --t-nav-glass: rgba(255, 255, 255, 0.72);
+  --t-nav-glass-lens: rgba(255, 255, 255, 0.55);
+}
+
+@theme inline {
+  --font-sans: 'Outfit Variable', system-ui, sans-serif;
+  --color-bg: var(--t-bg);
+  --color-surface: var(--t-surface);
+  --color-card: var(--t-card);
+  --color-track: var(--t-track);
+  --color-navbg: var(--t-navbg);
+  --color-userbg: var(--t-userbg);
+  --color-accent: var(--t-accent);
+  --color-ink: var(--t-ink);
+  --color-text: var(--t-text);
+  --color-soft: var(--t-soft);
+  --color-muted: var(--t-muted);
+  --color-dim: var(--t-dim);
+  --color-fade: var(--t-fade);
+  --color-navmut: var(--t-navmut);
+  --color-border: var(--t-border);
+  --color-border2: var(--t-border2);
+  --color-star-off: var(--t-star-off);
+  --color-danger: var(--t-danger);
+  --color-warn: var(--t-warn);
+  --color-green: var(--t-green);
+}
+
+/* Yellow works as a fill on light but not as text: remap just the text
+   usage (single contained exception, mirrors the approved light mock). */
+:root[data-theme='light'] .text-accent {
+  color: #a97800;
+}
+/* The white/5 hairlines between card rows vanish on light — theme them. */
+:root[data-theme='light'] .border-white\/5 {
+  border-color: var(--t-hairline);
 }
 
 html {

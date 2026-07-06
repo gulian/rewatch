@@ -184,7 +184,11 @@
     "traktRowHint": "Import, export or mirror your history with Trakt.tv",
     "dataSection": "My data",
     "importRowHint": "Bring your full TV Time history back",
-    "footerIssue": "Report a bug / idea"
+    "footerIssue": "Report a bug / idea",
+    "theme": "Theme",
+    "theme_dark": "Dark",
+    "theme_light": "Light",
+    "theme_system": "Auto"
   },
   "resolve": {
     "title": "To resolve",

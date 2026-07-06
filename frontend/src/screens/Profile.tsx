@@ -7,6 +7,7 @@ import { useLegalInfo, useLibrary, useMe, usePending, useStats } from '../api/ho
 import { ScreenTitle, Spinner } from '../components/ui'
 import { getCurrentSubscription, pushSupported, subscribeToPush, unsubscribeFromPush } from '../lib/push'
 import { isStandalone } from '../lib/install'
+import { getThemePref, setThemePref, type ThemePref } from '../lib/theme'
 
 function NotificationsRow() {
   const { t } = useTranslation()
@@ -85,6 +86,36 @@ function NotificationsRow() {
 }
 
 // FR/EN segment — persists on the account and switches the UI immediately.
+function ThemeRow() {
+  const { t } = useTranslation()
+  const [pref, setPref] = useState<ThemePref>(getThemePref())
+
+  const change = (next: ThemePref) => {
+    setThemePref(next)
+    setPref(next)
+  }
+
+  return (
+    <div className="flex w-full items-center justify-between gap-3 border-t border-white/5 px-4 py-3.5">
+      <span className="text-sm font-semibold">{t('profile.theme')}</span>
+      <div className="bg-track flex rounded-[10px] p-0.5">
+        {(['dark', 'light', 'system'] as const).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => change(mode)}
+            className={`rounded-lg px-2.5 py-1 text-xs font-extrabold ${
+              pref === mode ? 'bg-accent text-ink' : 'text-muted'
+            }`}
+          >
+            {t(`profile.theme_${mode}`)}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function LanguageRow() {
   const { t, i18n } = useTranslation()
   const qc = useQueryClient()
@@ -492,6 +523,7 @@ export default function Profile() {
             </button>
           )}
           <LanguageRow />
+          <ThemeRow />
           <button
             type="button"
             onClick={() => setShowPassword(true)}

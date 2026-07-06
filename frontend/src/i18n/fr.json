@@ -184,7 +184,11 @@
     "traktRowHint": "Importer, exporter ou refléter ton historique avec Trakt.tv",
     "dataSection": "Mes données",
     "importRowHint": "Récupère tout ton historique TV Time",
-    "footerIssue": "Un bug / une idée ?"
+    "footerIssue": "Un bug / une idée ?",
+    "theme": "Thème",
+    "theme_dark": "Sombre",
+    "theme_light": "Clair",
+    "theme_system": "Auto"
   },
   "resolve": {
     "title": "À résoudre",

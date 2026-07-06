@@ -138,7 +138,7 @@ export default function Layout() {
       <nav
         style={lens ? { backdropFilter: LENS_BACKDROP, WebkitBackdropFilter: LENS_BACKDROP } : undefined}
         className={`fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-20 flex gap-1 rounded-[30px] border border-white/12 px-2 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,.12),0_10px_40px_rgba(0,0,0,.55)] lg:hidden ${
-          lens ? 'bg-[rgba(13,19,34,.38)]' : 'bg-[rgba(13,19,34,.55)] backdrop-blur-2xl backdrop-saturate-150'
+          lens ? 'bg-[var(--t-nav-glass-lens)]' : 'bg-[var(--t-nav-glass)] backdrop-blur-2xl backdrop-saturate-150'
         }`}
       >
         {TABS.map((tab) => (
