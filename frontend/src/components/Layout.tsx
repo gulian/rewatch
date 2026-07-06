@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useMe, useStats } from '../api/hooks'
 import { minutesToDaysHours } from '../lib/format'
+import PullToRefresh from './PullToRefresh'
 import PushPrompt from './PushPrompt'
 import { LENS_BACKDROP, LiquidGlassFilter, useLensSupport } from './LiquidGlass'
 
@@ -93,6 +94,8 @@ export default function Layout() {
       </main>
 
       <PushPrompt />
+
+      <PullToRefresh />
 
       <LiquidGlassFilter />
 
