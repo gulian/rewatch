@@ -34,7 +34,8 @@
     "emptyCta": "Find a show",
     "emptyImportCta": "Coming from TV Time? Import your history",
     "filterPlaceholder": "Filter your shows…",
-    "filterNoMatch": "Nothing matches this filter."
+    "filterNoMatch": "Nothing matches this filter.",
+    "installBanner": "Install Rewatch on your home screen"
   },
   "calendar": {
     "title": "Calendar",
@@ -173,7 +174,9 @@
     "deleteModalText": "Your account and everything it contains will be <b>permanently erased</b>. There is <b>no way back</b>. Tip: export your data first if you want to keep a copy.",
     "deleteButton": "Delete my account",
     "deleteError": "Error — account unchanged",
-    "legalLink": "Privacy & legal notice"
+    "legalLink": "Privacy & legal notice",
+    "installRow": "Install as an app",
+    "installRowHint": "Home screen icon + push notifications"
   },
   "resolve": {
     "title": "To resolve",
@@ -249,7 +252,9 @@
     "title": "Never miss a release",
     "text": "Get a notification the day an episode of your shows airs.",
     "enable": "Enable notifications",
-    "later": "Later"
+    "later": "Later",
+    "installFirst": "To get notified when episodes air, first install Rewatch on your home screen.",
+    "installCta": "Show me how"
   },
   "admin": {
     "title": "Console",
@@ -362,5 +367,30 @@
     "hostTitle": "Hosting",
     "sourceTitle": "Source code",
     "sourceText": "Rewatch is free software under the AGPL-3.0 license. The source code of this service is available on GitHub."
+  },
+  "install": {
+    "title": "Install as an app",
+    "intro": "Rewatch works like a native app: an icon on your home screen, full screen, and push notifications when new episodes air. Two minutes, no app store.",
+    "desktop": "Computer",
+    "alreadyInstalled": "You're already using the installed app — nothing to do.",
+    "nativeButton": "Install Rewatch",
+    "nativeDone": "Installed! Look for the Rewatch icon.",
+    "iosStep1Title": "Open {{host}} in Safari",
+    "iosStep1Text": "The install option only exists in Safari.",
+    "iosSafariWarnLabel": "Coming from Instagram or another app?",
+    "iosSafariWarn": "Their built-in browser can't install apps. Open the link in the real Safari first (⋯ menu → Open in browser).",
+    "iosStep2Title": "Tap the share button",
+    "iosStep2Text": "The square with an arrow, at the bottom of Safari.",
+    "iosStep3Title": "\"Add to Home Screen\", then \"Add\"",
+    "iosStep3Text": "Scroll the list if needed. Confirm with \"Add\" at the top right.",
+    "androidStep1Title": "Open the Chrome menu (⋮) → \"Install app\"",
+    "androidStep1Text": "On {{host}}, tap the three dots at the top right of Chrome.",
+    "androidStep2Title": "Confirm",
+    "androidStep2Text": "The Rewatch icon lands on your home screen; the app opens full screen.",
+    "desktopStep1Title": "Click the install icon in the address bar",
+    "desktopStep1Text": "In Chrome or Edge, a small install icon appears at the right end of the address bar. Click it and confirm.",
+    "stepPushTitle": "Turn on notifications",
+    "stepPushText": "Open the installed app, go to Profile → Release notifications, and accept the permission. You'll get a push the day a new episode airs.",
+    "iosPushNote": "On iPhone, notifications require iOS 16.4 or later and only work from the installed app — not from a Safari tab. That's also why the toggle does nothing in the browser."
   }
 }

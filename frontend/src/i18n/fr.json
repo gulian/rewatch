@@ -34,7 +34,8 @@
     "emptyCta": "Chercher une série",
     "emptyImportCta": "Tu viens de TV Time ? Importe ton historique",
     "filterPlaceholder": "Filtrer vos séries…",
-    "filterNoMatch": "Rien ne correspond à ce filtre."
+    "filterNoMatch": "Rien ne correspond à ce filtre.",
+    "installBanner": "Installe Rewatch sur ton écran d'accueil"
   },
   "calendar": {
     "title": "Calendrier",
@@ -173,7 +174,9 @@
     "deleteModalText": "Votre compte et tout ce qu'il contient seront <b>définitivement effacés</b>. Il n'y a <b>aucun moyen de revenir en arrière</b>. Astuce : exportez d'abord vos données si vous voulez en garder une copie.",
     "deleteButton": "Supprimer mon compte",
     "deleteError": "Erreur — compte inchangé",
-    "legalLink": "Confidentialité & mentions légales"
+    "legalLink": "Confidentialité & mentions légales",
+    "installRow": "Installer comme une app",
+    "installRowHint": "Icône sur l'écran d'accueil + notifications push"
   },
   "resolve": {
     "title": "À résoudre",
@@ -249,7 +252,9 @@
     "title": "Ne ratez plus une sortie",
     "text": "Recevez une notification le jour où un épisode de vos séries sort.",
     "enable": "Activer les notifications",
-    "later": "Plus tard"
+    "later": "Plus tard",
+    "installFirst": "Pour être prévenu des sorties d'épisodes, installe d'abord Rewatch sur ton écran d'accueil.",
+    "installCta": "Montre-moi comment"
   },
   "admin": {
     "title": "Console",
@@ -362,5 +367,30 @@
     "hostTitle": "Hébergement",
     "sourceTitle": "Code source",
     "sourceText": "Rewatch est un logiciel libre sous licence AGPL-3.0. Le code source de ce service est disponible sur GitHub."
+  },
+  "install": {
+    "title": "Installer comme une app",
+    "intro": "Rewatch fonctionne comme une app native : une icône sur ton écran d'accueil, plein écran, et des notifications push quand un épisode sort. Deux minutes, sans app store.",
+    "desktop": "Ordinateur",
+    "alreadyInstalled": "Tu utilises déjà l'app installée — rien à faire.",
+    "nativeButton": "Installer Rewatch",
+    "nativeDone": "Installé ! Cherche l'icône Rewatch.",
+    "iosStep1Title": "Ouvre {{host}} dans Safari",
+    "iosStep1Text": "L'option d'installation n'existe que dans Safari.",
+    "iosSafariWarnLabel": "Tu viens d'Instagram ou d'une autre app ?",
+    "iosSafariWarn": "Leur navigateur intégré ne peut pas installer d'app. Ouvre d'abord le lien dans le vrai Safari (menu ⋯ → Ouvrir dans le navigateur).",
+    "iosStep2Title": "Appuie sur le bouton partager",
+    "iosStep2Text": "Le carré avec une flèche, en bas de Safari.",
+    "iosStep3Title": "« Sur l'écran d'accueil », puis « Ajouter »",
+    "iosStep3Text": "Fais défiler la liste si besoin. Confirme avec « Ajouter » en haut à droite.",
+    "androidStep1Title": "Ouvre le menu Chrome (⋮) → « Installer l'application »",
+    "androidStep1Text": "Sur {{host}}, appuie sur les trois points en haut à droite de Chrome.",
+    "androidStep2Title": "Confirme",
+    "androidStep2Text": "L'icône Rewatch arrive sur ton écran d'accueil ; l'app s'ouvre en plein écran.",
+    "desktopStep1Title": "Clique l'icône d'installation dans la barre d'adresse",
+    "desktopStep1Text": "Dans Chrome ou Edge, une petite icône d'installation apparaît à droite de la barre d'adresse. Clique et confirme.",
+    "stepPushTitle": "Active les notifications",
+    "stepPushText": "Ouvre l'app installée, va dans Profil → Notifications de sortie, et accepte la permission. Tu recevras un push le jour où un épisode sort.",
+    "iosPushNote": "Sur iPhone, les notifications demandent iOS 16.4 minimum et ne marchent que depuis l'app installée — pas depuis un onglet Safari. C'est aussi pour ça que le bouton ne fait rien dans le navigateur."
   }
 }

@@ -7,6 +7,7 @@ import { Spinner } from './components/ui'
 import Admin from './screens/Admin'
 import { Setup } from './screens/OpsSettings'
 import Calendar from './screens/Calendar'
+import Install from './screens/Install'
 import Legal from './screens/Legal'
 import Login from './screens/Login'
 import { Reset, Verify } from './screens/TokenPages'
@@ -80,6 +81,7 @@ export default function App() {
         <Route path="/stats" element={<Stats />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/import/tvtime" element={<TvTimeHelp />} />
+        <Route path="/install" element={<Install />} />
         <Route path="/resolve" element={<Resolve />} />
       </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

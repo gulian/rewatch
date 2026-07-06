@@ -2,20 +2,29 @@
 // Browsers require a user gesture for the permission prompt, so "on by
 // default" means proactively asking on first app entry.
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getCurrentSubscription, pushSupported, subscribeToPush } from '../lib/push'
+import { detectPlatform, isStandalone } from '../lib/install'
 
 const DISMISSED_KEY = 'rewatch-push-prompt-dismissed'
 
 export default function PushPrompt() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [visible, setVisible] = useState(false)
   const [busy, setBusy] = useState(false)
+  // iOS only supports push from the installed app: there, the prompt becomes
+  // an invitation to install first.
+  const needsInstall = !pushSupported() && detectPlatform() === 'ios' && !isStandalone()
 
   useEffect(() => {
-    if (!pushSupported()) return
-    if (Notification.permission !== 'default') return // already granted or denied
     if (localStorage.getItem(DISMISSED_KEY)) return
+    if (!pushSupported()) {
+      if (detectPlatform() === 'ios' && !isStandalone()) setVisible(true)
+      return
+    }
+    if (Notification.permission !== 'default') return // already granted or denied
     getCurrentSubscription().then((sub) => {
       if (!sub) setVisible(true)
     })
@@ -49,17 +58,19 @@ export default function PushPrompt() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-[14.5px] font-extrabold">{t('pushPrompt.title')}</div>
-            <div className="text-muted mt-0.5 text-[12.5px] leading-normal">{t('pushPrompt.text')}</div>
+            <div className="text-muted mt-0.5 text-[12.5px] leading-normal">
+              {needsInstall ? t('pushPrompt.installFirst') : t('pushPrompt.text')}
+            </div>
           </div>
         </div>
         <div className="mt-3 flex gap-2">
           <button
             type="button"
-            onClick={enable}
+            onClick={needsInstall ? () => { later(); navigate('/install') } : enable}
             disabled={busy}
             className="bg-accent text-ink flex-1 rounded-[12px] py-2.5 text-[13.5px] font-extrabold disabled:opacity-60"
           >
-            {t('pushPrompt.enable')}
+            {needsInstall ? t('pushPrompt.installCta') : t('pushPrompt.enable')}
           </button>
           <button type="button" onClick={later} className="text-muted flex-none px-3 text-[13px] font-bold">
             {t('pushPrompt.later')}

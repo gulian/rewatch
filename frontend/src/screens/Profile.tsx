@@ -6,6 +6,7 @@ import { api, ApiError } from '../api/client'
 import { useImportJob, useLegalInfo, useLibrary, useMe, usePending, useStats } from '../api/hooks'
 import { ScreenTitle, Spinner } from '../components/ui'
 import { getCurrentSubscription, pushSupported, subscribeToPush, unsubscribeFromPush } from '../lib/push'
+import { isStandalone } from '../lib/install'
 
 function ImportCard() {
   const { t } = useTranslation()
@@ -650,6 +651,20 @@ export default function Profile() {
             <div className="flex items-center gap-2.5">
               <span className="bg-accent text-ink rounded px-1.5 py-0.5 text-[10px] font-extrabold">ADMIN</span>
               <span className="text-sm font-semibold">{t('admin.title')}</span>
+            </div>
+            <span className="text-dim">›</span>
+          </Link>
+        )}
+
+        {!isStandalone() && (
+          <Link
+            viewTransition
+            to="/install"
+            className="bg-card flex items-center justify-between rounded-[18px] border border-line px-4 py-3.5"
+          >
+            <div>
+              <div className="text-sm font-semibold">{t('profile.installRow')}</div>
+              <div className="text-dim mt-0.5 text-[11.5px] font-semibold">{t('profile.installRowHint')}</div>
             </div>
             <span className="text-dim">›</span>
           </Link>

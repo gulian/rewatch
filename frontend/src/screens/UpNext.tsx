@@ -8,6 +8,7 @@ import type { WatchlistShow } from '../api/types'
 import { Poster } from '../components/Poster'
 import { CheckButton, ProgressBar, ScreenTitle } from '../components/ui'
 import { epCode, frDate, runtimeLabel } from '../lib/format'
+import { detectPlatform, isStandalone } from '../lib/install'
 
 function UpNextCard({ item }: { item: WatchlistShow }) {
   const { t } = useTranslation()
@@ -130,6 +131,33 @@ function EmptyState() {
   )
 }
 
+const INSTALL_BANNER_KEY = 'rewatch-install-banner-dismissed'
+
+function InstallBanner() {
+  const { t } = useTranslation()
+  const [dismissed, setDismissed] = useState(
+    () => isStandalone() || detectPlatform() === 'desktop' || !!localStorage.getItem(INSTALL_BANNER_KEY),
+  )
+  if (dismissed) return null
+  return (
+    <div className="bg-card flex items-center gap-3 rounded-[14px] border border-line px-4 py-3">
+      <Link viewTransition to="/install" className="text-accent min-w-0 flex-1 text-[13px] font-extrabold">
+        {t('upnext.installBanner')} ›
+      </Link>
+      <button
+        type="button"
+        className="text-dim flex-none px-1 text-[13px] font-semibold"
+        onClick={() => {
+          localStorage.setItem(INSTALL_BANNER_KEY, '1')
+          setDismissed(true)
+        }}
+      >
+        ✕
+      </button>
+    </div>
+  )
+}
+
 const normalize = (s: string) =>
   s
     .normalize('NFKD')
@@ -199,9 +227,15 @@ export default function UpNext() {
       {isLoading ? (
         <Skeleton />
       ) : !data || (data.shows.length === 0 && data.movies.length === 0) ? (
-        <EmptyState />
+        <>
+          <div className="px-4 pt-3 lg:px-8">
+            <InstallBanner />
+          </div>
+          <EmptyState />
+        </>
       ) : (
         <div className="flex flex-col gap-2.5 px-4 pt-3 pb-4 lg:px-8">
+          <InstallBanner />
           <label
             className={`bg-card flex items-center gap-2.5 rounded-[14px] border px-4 py-2.75 lg:max-w-md ${
               query ? 'border-accent border-[1.5px]' : 'border-white/8'
