@@ -4,9 +4,9 @@
 [![Docker image](https://img.shields.io/badge/ghcr.io-gulian%2Frewatch-2496ED?logo=docker&logoColor=white)](https://github.com/gulian/rewatch/pkgs/container/rewatch)
 [![GitHub stars](https://img.shields.io/github/stars/gulian/rewatch?style=social)](https://github.com/gulian/rewatch)
 
-A self-hosted tracker for TV shows and movies. Built as a home for TV Time refugees: it imports your full TV Time GDPR export (watch history, followed shows, ratings, watchlist) and keeps the parts of the app that mattered, without the social clutter.
+A self-hosted tracker for TV shows and movies. Built as a home for TV Time refugees: it imports your full TV Time GDPR export (watch history, followed shows, ratings, watchlist) and keeps the parts of the app that mattered, without the social clutter. It also syncs both ways with Trakt.tv.
 
-Installable PWA, multi-user, English and French.
+Installable PWA, multi-user, English and French, dark and light themes.
 
 **Demo instance**: https://rewatch.wrks.fr — registrations open while capacity holds. For anything long-term, self-host: it's one command (see below).
 
@@ -19,18 +19,30 @@ Installable PWA, multi-user, English and French.
   <img src="docs/screenshots/calendar.png" width="24%" alt="Calendar" />
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/cast.png" width="24%" alt="Cast on a show page" />
+  <img src="docs/screenshots/best-of.png" width="24%" alt="Best ratings and favorites" />
+  <img src="docs/screenshots/light.png" width="24%" alt="Light theme" />
+</p>
+
 ## Features
 
 - **Episode and movie tracking** with the classic one-tap check button on your next episode
 - **TV Time import**: upload your GDPR export zip, get your history back (episodes, shows with their states, movies, ratings). Ambiguous movie titles go through a manual resolution screen
-- **Up next**: one card per followed show with the next unwatched episode
+- **Trakt.tv sync**: link your account in one tap (device code), import your Trakt history, export Rewatch to Trakt, or mirror your check-ins live in both directions — additions only, nothing ever deletes your data
+- **Up next**: one card per followed show with the next unwatched episode, shows/movies tabs, quick filter
 - **Calendar** of upcoming releases for the shows you follow
-- **Stats**: total screen time, monthly activity, genre breakdown, top shows by time spent
+- **Half-star ratings and favorites** on shows and movies, surfaced in stats as your best-of, with a library filter to find them again
+- **Cast** with photos on every show and movie page
+- **Stats**: total screen time, monthly activity, genre breakdown, top shows by time spent, best ratings, favorites
 - **Push notifications** the day an episode airs (Web Push, per-device opt-in)
+- **Built-in guides**: install-as-app tutorial per platform, TV Time export walkthrough
+- **Dark, light or system theme**, per device
 - **Full account auth**: email verification, password reset, session revocation
 - **Two languages** (en/fr), per-account, covering the UI, emails, push messages and cached TMDB metadata
 - **Data export**: your complete history as portable JSON with TMDB and TVDB ids
 - **Admin console** with live telemetry (latency percentiles, throughput, online users) and account management
+- **Privacy-ready**: optional legal/privacy page for instances hosting third-party users, self-service account deletion
 
 Metadata comes from [TMDB](https://www.themoviedb.org/). You need a free TMDB API key to run an instance.
 
