@@ -19,7 +19,7 @@ function Label({ text, hint }: { text: string; hint?: string }) {
   return (
     <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-3">
       <span className="text-[10px] tracking-[0.12em] text-[var(--ops-dim)] uppercase">{text}</span>
-      {hint && <span className="text-[10px] whitespace-nowrap text-[var(--ops-dim)]">{hint}</span>}
+      {hint && <span className="min-w-0 text-[10px] text-[var(--ops-dim)]">{hint}</span>}
     </div>
   )
 }

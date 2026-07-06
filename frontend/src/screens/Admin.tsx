@@ -117,7 +117,7 @@ function AccountRow({ user, self }: { user: AdminUser; self: boolean }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="grid w-full grid-cols-[1fr_auto] items-center gap-x-4 border-t border-[var(--ops-line)] px-4 py-2.5 text-left transition-colors hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_auto_auto_auto] lg:px-6"
+        className="grid w-full grid-cols-[minmax(0,1fr)_auto_1.25rem] items-center gap-x-4 border-t border-[var(--ops-line)] px-4 py-2.5 text-left transition-colors hover:bg-white/[0.02] sm:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_5rem_4.5rem_1.25rem] lg:px-6"
       >
         <span className="flex min-w-0 items-center gap-2">
           <span className="h-1.5 w-1.5 flex-none" style={{ background: status.color }} />
