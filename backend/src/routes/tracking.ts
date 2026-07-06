@@ -9,7 +9,6 @@ import { FollowState } from '../generated/prisma/client.js'
 const idParam = z.object({ id: z.coerce.number().int().positive() })
 const followBody = z.object({
   state: z.enum(FollowState).optional(),
-  isFavorite: z.boolean().optional(),
 })
 
 // Marking an episode as watched implies following the show (TV Time behavior).
@@ -37,11 +36,39 @@ export default async function trackingRoutes(app: FastifyInstance) {
         userId: request.user!.id,
         showTmdbId: params.data.id,
         state: body.data.state ?? 'WATCHING',
-        isFavorite: body.data.isFavorite ?? false,
       },
       update: body.data,
     })
   })
+
+  // ——— Favorites: one heart for shows and movies ———
+
+  for (const [kind, target] of [
+    ['shows', 'SHOW'],
+    ['movies', 'MOVIE'],
+  ] as const) {
+    app.put(`/api/${kind}/:id/favorite`, { preHandler: app.requireAuth }, async (request, reply) => {
+      const params = idParam.safeParse(request.params)
+      if (!params.success) return reply.code(400).send({ error: 'invalid_id' })
+      if (kind === 'shows') await getShowCached(params.data.id)
+      else await getMovieCached(params.data.id)
+      await prisma.favorite.upsert({
+        where: { userId_target_targetRef: { userId: request.user!.id, target, targetRef: params.data.id } },
+        create: { userId: request.user!.id, target, targetRef: params.data.id },
+        update: {},
+      })
+      return { ok: true }
+    })
+
+    app.delete(`/api/${kind}/:id/favorite`, { preHandler: app.requireAuth }, async (request, reply) => {
+      const params = idParam.safeParse(request.params)
+      if (!params.success) return reply.code(400).send({ error: 'invalid_id' })
+      await prisma.favorite.deleteMany({
+        where: { userId: request.user!.id, target, targetRef: params.data.id },
+      })
+      return { ok: true }
+    })
+  }
 
   app.delete('/api/shows/:id/follow', { preHandler: app.requireAuth }, async (request, reply) => {
     const params = idParam.safeParse(request.params)

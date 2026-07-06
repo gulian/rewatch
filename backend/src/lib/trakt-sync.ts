@@ -95,7 +95,7 @@ export function runTraktImport(jobId: number, userId: number): Promise<void> {
     for (const tmdbId of watchedShows) {
       await prisma.follow.upsert({
         where: { userId_showTmdbId: { userId, showTmdbId: tmdbId } },
-        create: { userId, showTmdbId: tmdbId, state: FollowState.WATCHING, isFavorite: false },
+        create: { userId, showTmdbId: tmdbId, state: FollowState.WATCHING },
         update: {},
       })
       follows++
@@ -104,7 +104,7 @@ export function runTraktImport(jobId: number, userId: number): Promise<void> {
       if (w.type !== 'show' || !w.show?.ids.tmdb) continue
       await prisma.follow.upsert({
         where: { userId_showTmdbId: { userId, showTmdbId: w.show.ids.tmdb } },
-        create: { userId, showTmdbId: w.show.ids.tmdb, state: FollowState.FOR_LATER, isFavorite: false },
+        create: { userId, showTmdbId: w.show.ids.tmdb, state: FollowState.FOR_LATER },
         update: {},
       })
     }
@@ -271,7 +271,7 @@ export async function runTraktPull(userId: number): Promise<{ episodes: number; 
       await prisma.watchEvent.create({ data: { userId, episodeId: ep.id, watchedAt } })
       await prisma.follow.upsert({
         where: { userId_showTmdbId: { userId, showTmdbId } },
-        create: { userId, showTmdbId, state: FollowState.WATCHING, isFavorite: false },
+        create: { userId, showTmdbId, state: FollowState.WATCHING },
         update: {},
       })
       episodes++

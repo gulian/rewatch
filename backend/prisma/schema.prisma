@@ -29,6 +29,7 @@ model User {
   watchEvents   WatchEvent[]
   movieWatchlist MovieWatchlistEntry[]
   ratings       Rating[]
+  favorites     Favorite[]
   pushSubscriptions PushSubscription[]
   traktAccount  TraktAccount?
 
@@ -220,7 +221,6 @@ model Follow {
   userId     Int         @map("user_id")
   showTmdbId Int         @map("show_tmdb_id")
   state      FollowState @default(WATCHING)
-  isFavorite Boolean     @default(false) @map("is_favorite")
   followedAt DateTime    @default(now()) @map("followed_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -309,6 +309,19 @@ enum RatingTarget {
   SHOW
   MOVIE
   EPISODE
+}
+
+// One heart concept for everything, same addressing scheme as Rating.
+model Favorite {
+  userId    Int          @map("user_id")
+  target    RatingTarget
+  targetRef Int          @map("target_ref") // tmdbId (show/movie)
+  addedAt   DateTime     @default(now()) @map("added_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, target, targetRef])
+  @@map("favorites")
 }
 
 model Rating {

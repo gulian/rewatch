@@ -49,7 +49,6 @@ export type Follow = {
   userId: number
   showTmdbId: number
   state: FollowState
-  isFavorite: boolean
   followedAt: string
 }
 
@@ -81,8 +80,8 @@ export type LibraryShow = {
 }
 
 export type ShowDetail = Show & { episodes: Episode[] }
-export type ShowUser = { follow: Follow | null; rating: number | null; watchedEpisodeIds: number[] }
-export type MovieUser = { watchedAts: string[]; inWatchlist: boolean; rating: number | null }
+export type ShowUser = { follow: Follow | null; rating: number | null; isFavorite: boolean; watchedEpisodeIds: number[] }
+export type MovieUser = { watchedAts: string[]; inWatchlist: boolean; rating: number | null; isFavorite: boolean }
 
 export type Stats = {
   totalMinutes: number
@@ -165,3 +164,6 @@ export type AdminSetting = {
   envLocked: boolean
   value: string | null // null for secrets, always
 }
+
+export type HighlightCard = { kind: 'show' | 'movie'; tmdbId: number; title: string; posterPath: string | null }
+export type Highlights = { favorites: HighlightCard[]; topRated: (HighlightCard & { rating: number })[] }

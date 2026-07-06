@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useLibrary, useSearch, useTracking, useWatchlist } from '../api/hooks'
+import { useHighlights, useLibrary, useSearch, useTracking, useWatchlist } from '../api/hooks'
 import { Poster } from '../components/Poster'
 import { ProgressBar, ScreenTitle, Spinner } from '../components/ui'
 
@@ -82,7 +82,7 @@ function ResultCard({
   )
 }
 
-type LibraryFilter = 'ALL' | 'WATCHING' | 'FOR_LATER' | 'ARCHIVED'
+type LibraryFilter = 'ALL' | 'WATCHING' | 'FOR_LATER' | 'ARCHIVED' | 'FAVORITES'
 
 export default function Search() {
   const { t } = useTranslation()
@@ -91,14 +91,19 @@ export default function Search() {
   const search = useSearch(q)
   const library = useLibrary()
   const { data: watchlist } = useWatchlist()
+  const { data: highlights } = useHighlights()
+  const favoriteMovies = (highlights?.favorites ?? []).filter((c) => c.kind === 'movie')
   const searching = q.trim().length > 0
 
-  const filteredLibrary = (library.data ?? []).filter((l) => filter === 'ALL' || l.state === filter)
+  const filteredLibrary = (library.data ?? []).filter((l) =>
+    filter === 'ALL' ? true : filter === 'FAVORITES' ? l.isFavorite : l.state === filter,
+  )
   const chips: [LibraryFilter, string][] = [
     ['ALL', t('search.filterAll')],
     ['WATCHING', t('search.filterWatching')],
     ['FOR_LATER', t('search.filterForLater')],
     ['ARCHIVED', t('search.filterArchived')],
+    ['FAVORITES', `♥ ${t('search.filterFavorites')}`],
   ]
 
   return (
@@ -180,6 +185,19 @@ export default function Search() {
               <div className="text-dim col-span-full py-8 text-center text-sm">{t('search.filterEmpty')}</div>
             )}
           </div>
+          {filter === 'FAVORITES' && favoriteMovies.length > 0 && (
+            <>
+              <div className="px-1 pt-2 text-base font-extrabold">{t('search.favoriteMovies')}</div>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+                {favoriteMovies.map((m) => (
+                  <Link viewTransition key={m.tmdbId} to={`/movie/${m.tmdbId}`} className="flex flex-col gap-1.5">
+                    <Poster path={m.posterPath} title={m.title} size="w185" className="aspect-[2/3] w-full rounded-[13px] text-base" />
+                    <div className="truncate text-[11px] font-semibold">{m.title}</div>
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
           {filter === 'FOR_LATER' && (watchlist?.movies.length ?? 0) > 0 && (
             <>
               <div className="px-1 pt-2 text-base font-extrabold">{t('search.watchlistMovies')}</div>

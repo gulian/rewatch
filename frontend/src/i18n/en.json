@@ -60,7 +60,9 @@
     "filterEmpty": "No shows in this category.",
     "badgeForLater": "later",
     "badgeArchived": "archived",
-    "watchlistMovies": "Movies for later"
+    "watchlistMovies": "Movies for later",
+    "filterFavorites": "Favorites",
+    "favoriteMovies": "Favorite movies"
   },
   "show": {
     "watching": "Watching",
@@ -96,7 +98,9 @@
     "inHours": "in hours",
     "genres": "Genres",
     "others": "Others",
-    "topShows": "Top shows by time spent"
+    "topShows": "Top shows by time spent",
+    "topRated": "Your best ratings",
+    "favorites": "Your favorites"
   },
   "profile": {
     "title": "Profile",

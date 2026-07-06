@@ -60,7 +60,9 @@
     "filterEmpty": "Aucune série dans cette catégorie.",
     "badgeForLater": "+ tard",
     "badgeArchived": "archivée",
-    "watchlistMovies": "Films pour plus tard"
+    "watchlistMovies": "Films pour plus tard",
+    "filterFavorites": "Favoris",
+    "favoriteMovies": "Films favoris"
   },
   "show": {
     "watching": "En cours",
@@ -96,7 +98,9 @@
     "inHours": "en heures",
     "genres": "Genres",
     "others": "Autres",
-    "topShows": "Top séries par temps passé"
+    "topShows": "Top séries par temps passé",
+    "topRated": "Vos meilleures notes",
+    "favorites": "Vos favoris"
   },
   "profile": {
     "title": "Profil",

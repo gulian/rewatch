@@ -118,13 +118,14 @@ export default async function libraryRoutes(app: FastifyInstance) {
       {
         show_tmdb_id: number
         state: string
-        is_favorite: boolean
+        is_favorite: boolean | null
         watched: bigint
         aired: bigint
         last_watched_at: Date | null
       }[]
     >(Prisma.sql`
-      SELECT f.show_tmdb_id, f.state, f.is_favorite,
+      SELECT f.show_tmdb_id, f.state,
+        (fav.user_id IS NOT NULL) AS is_favorite,
         (SELECT count(DISTINCT w.episode_id) FROM watch_events w
           JOIN episodes e ON e.id = w.episode_id
           WHERE w.user_id = ${userId} AND e.show_tmdb_id = f.show_tmdb_id AND e.season > 0) AS watched,
@@ -133,7 +134,10 @@ export default async function libraryRoutes(app: FastifyInstance) {
         (SELECT max(w.watched_at) FROM watch_events w
           JOIN episodes e ON e.id = w.episode_id
           WHERE w.user_id = ${userId} AND e.show_tmdb_id = f.show_tmdb_id) AS last_watched_at
-      FROM follows f WHERE f.user_id = ${userId}
+      FROM follows f
+      LEFT JOIN favorites fav ON fav.user_id = f.user_id
+        AND fav.target = 'SHOW' AND fav.target_ref = f.show_tmdb_id
+      WHERE f.user_id = ${userId}
       ORDER BY last_watched_at DESC NULLS LAST
     `)
     const shows = await localizeShows(
@@ -144,7 +148,7 @@ export default async function libraryRoutes(app: FastifyInstance) {
     return rows.map((r) => ({
       show: byId.get(r.show_tmdb_id),
       state: r.state,
-      isFavorite: r.is_favorite,
+      isFavorite: r.is_favorite === true,
       watched: Number(r.watched),
       aired: Number(r.aired),
     }))
@@ -178,11 +182,14 @@ export default async function libraryRoutes(app: FastifyInstance) {
     if (!params.success) return reply.code(400).send({ error: 'invalid_id' })
     const userId = request.user!.id
 
-    const [follow, rating, watched] = await Promise.all([
+    const [follow, rating, favorite, watched] = await Promise.all([
       prisma.follow.findUnique({
         where: { userId_showTmdbId: { userId, showTmdbId: params.data.id } },
       }),
       prisma.rating.findUnique({
+        where: { userId_target_targetRef: { userId, target: 'SHOW', targetRef: params.data.id } },
+      }),
+      prisma.favorite.findUnique({
         where: { userId_target_targetRef: { userId, target: 'SHOW', targetRef: params.data.id } },
       }),
       prisma.watchEvent.groupBy({
@@ -195,7 +202,54 @@ export default async function libraryRoutes(app: FastifyInstance) {
     return {
       follow,
       rating: rating?.value ?? null,
+      isFavorite: favorite !== null,
       watchedEpisodeIds: watched.map((w) => w.episodeId),
+    }
+  })
+
+  // Best of the library: favorites and top ratings, shows and movies mixed.
+  app.get('/api/library/highlights', { preHandler: app.requireAuth }, async (request) => {
+    const userId = request.user!.id
+    const lang = request.user!.language
+    const [favorites, ratings] = await Promise.all([
+      prisma.favorite.findMany({ where: { userId }, orderBy: { addedAt: 'desc' } }),
+      prisma.rating.findMany({
+        where: { userId, target: { in: ['SHOW', 'MOVIE'] } },
+        orderBy: [{ value: 'desc' }, { ratedAt: 'desc' }],
+        take: 24,
+      }),
+    ])
+
+    const showIds = new Set<number>()
+    const movieIds = new Set<number>()
+    for (const item of [...favorites, ...ratings]) {
+      if (item.target === 'SHOW') showIds.add(item.targetRef)
+      else if (item.target === 'MOVIE') movieIds.add(item.targetRef)
+    }
+    const [shows, movies] = await Promise.all([
+      localizeShows(await prisma.show.findMany({ where: { tmdbId: { in: [...showIds] } } }), lang),
+      localizeMovies(await prisma.movie.findMany({ where: { tmdbId: { in: [...movieIds] } } }), lang),
+    ])
+    const showById = new Map(shows.map((s) => [s.tmdbId, s]))
+    const movieById = new Map(movies.map((m) => [m.tmdbId, m]))
+
+    const card = (target: 'SHOW' | 'MOVIE', ref: number) => {
+      if (target === 'SHOW') {
+        const s = showById.get(ref)
+        return s ? { kind: 'show' as const, tmdbId: ref, title: s.name, posterPath: s.posterPath } : null
+      }
+      const m = movieById.get(ref)
+      return m ? { kind: 'movie' as const, tmdbId: ref, title: m.title, posterPath: m.posterPath } : null
+    }
+
+    return {
+      favorites: favorites.map((f) => card(f.target as 'SHOW' | 'MOVIE', f.targetRef)).filter(Boolean),
+      topRated: ratings
+        .map((r) => {
+          const c = card(r.target as 'SHOW' | 'MOVIE', r.targetRef)
+          return c ? { ...c, rating: r.value } : null
+        })
+        .filter(Boolean),
     }
   })
 
@@ -205,7 +259,7 @@ export default async function libraryRoutes(app: FastifyInstance) {
     if (!params.success) return reply.code(400).send({ error: 'invalid_id' })
     const userId = request.user!.id
 
-    const [events, entry, rating] = await Promise.all([
+    const [events, entry, rating, favorite] = await Promise.all([
       prisma.watchEvent.findMany({
         where: { userId, movieId: params.data.id },
         orderBy: { watchedAt: 'asc' },
@@ -217,12 +271,16 @@ export default async function libraryRoutes(app: FastifyInstance) {
       prisma.rating.findUnique({
         where: { userId_target_targetRef: { userId, target: 'MOVIE', targetRef: params.data.id } },
       }),
+      prisma.favorite.findUnique({
+        where: { userId_target_targetRef: { userId, target: 'MOVIE', targetRef: params.data.id } },
+      }),
     ])
 
     return {
       watchedAts: events.map((e) => e.watchedAt),
       inWatchlist: entry !== null,
       rating: rating?.value ?? null,
+      isFavorite: favorite !== null,
     }
   })
 }

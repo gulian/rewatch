@@ -44,6 +44,10 @@ export default async function accountRoutes(app: FastifyInstance) {
       (await localizeMovies([...movieMap.values()], lang)).map((m) => [m.tmdbId, m.title]),
     )
 
+    const favorites = await prisma.favorite.findMany({ where: { userId } })
+    const favoriteShows = new Set(favorites.filter((f) => f.target === 'SHOW').map((f) => f.targetRef))
+    const favoriteMovies = new Set(favorites.filter((f) => f.target === 'MOVIE').map((f) => f.targetRef))
+
     const payload = {
       format: 'rewatch-export',
       version: 1,
@@ -54,7 +58,7 @@ export default async function accountRoutes(app: FastifyInstance) {
         tvdbId: f.show.tvdbId,
         name: showNames.get(f.showTmdbId) ?? f.show.name,
         state: f.state,
-        isFavorite: f.isFavorite,
+        isFavorite: favoriteShows.has(f.showTmdbId),
         followedAt: f.followedAt,
         rating: showRatings.get(f.showTmdbId) ?? null,
       })),
@@ -71,6 +75,7 @@ export default async function accountRoutes(app: FastifyInstance) {
         tmdbId: m.tmdbId,
         title: movieTitles.get(m.tmdbId) ?? m.title,
         watchedAts: m.watchedAts,
+        isFavorite: favoriteMovies.has(m.tmdbId),
         rating: movieRatings.get(m.tmdbId) ?? null,
       })),
       movieWatchlist: watchlist.map((w) => ({ tmdbId: w.movieTmdbId, title: w.movie.title, addedAt: w.addedAt })),
@@ -105,6 +110,7 @@ export default async function accountRoutes(app: FastifyInstance) {
         prisma.watchEvent.deleteMany({ where: { userId } }),
         prisma.follow.deleteMany({ where: { userId } }),
         prisma.rating.deleteMany({ where: { userId } }),
+        prisma.favorite.deleteMany({ where: { userId } }),
         prisma.movieWatchlistEntry.deleteMany({ where: { userId } }),
         prisma.importPendingMovie.deleteMany({ where: { userId } }),
         prisma.importJob.deleteMany({ where: { userId } }),

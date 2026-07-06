@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useStats } from '../api/hooks'
+import { useHighlights, useStats } from '../api/hooks'
 import { Poster } from '../components/Poster'
 import { ScreenTitle, Spinner } from '../components/ui'
 import { minutesToDaysHours } from '../lib/format'
@@ -10,6 +10,7 @@ const GENRE_COLORS = ['#FFC94B', '#3FA98E', '#5B82D6', '#CD6A55', '#55628A']
 export default function Stats() {
   const { t, i18n } = useTranslation()
   const { data, isLoading } = useStats()
+  const { data: highlights } = useHighlights()
   if (isLoading || !data) return <Spinner />
 
   const numberLocale = i18n.language === 'fr' ? 'fr-FR' : 'en-GB'
@@ -139,6 +140,37 @@ export default function Stats() {
                 <span className="text-muted flex-none text-xs font-extrabold">{minutesToDaysHours(s.minutes)}</span>
               </Link>
             ))}
+          </div>
+        )}
+
+        {/* Top rated */}
+        {(highlights?.topRated.length ?? 0) > 0 && (
+          <div className="bg-card flex flex-col gap-3 rounded-[18px] border border-line p-4">
+            <div className="text-sm font-extrabold">{t('stats.topRated')}</div>
+            <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-6">
+              {highlights!.topRated.slice(0, 12).map((c) => (
+                <Link viewTransition key={`${c.kind}-${c.tmdbId}`} to={`/${c.kind}/${c.tmdbId}`} className="relative">
+                  <Poster path={c.posterPath} title={c.title} size="w185" className="aspect-[2/3] w-full rounded-[10px] text-xs" />
+                  <span className="bg-accent text-ink absolute -top-1.5 -right-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-extrabold">
+                    {c.rating}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Favorites */}
+        {(highlights?.favorites.length ?? 0) > 0 && (
+          <div className="bg-card flex flex-col gap-3 rounded-[18px] border border-line p-4">
+            <div className="text-sm font-extrabold">{t('stats.favorites')} ♥</div>
+            <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-6">
+              {highlights!.favorites.map((c) => (
+                <Link viewTransition key={`${c.kind}-${c.tmdbId}`} to={`/${c.kind}/${c.tmdbId}`}>
+                  <Poster path={c.posterPath} title={c.title} size="w185" className="aspect-[2/3] w-full rounded-[10px] text-xs" />
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </div>

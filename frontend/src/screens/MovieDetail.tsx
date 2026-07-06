@@ -39,6 +39,20 @@ export default function MovieDetail() {
         >
           ‹
         </button>
+        <button
+          type="button"
+          onClick={() =>
+            tracking.mutate({
+              method: user?.isFavorite ? 'delete' : 'put',
+              path: `/api/movies/${movieId}/favorite`,
+            })
+          }
+          className={`absolute top-3.5 right-4 flex h-8.5 w-8.5 items-center justify-center rounded-full bg-[rgba(9,12,20,.6)] text-[15px] ${
+            user?.isFavorite ? 'text-accent' : 'text-star-off'
+          }`}
+        >
+          ♥
+        </button>
       </div>
 
       <div className="relative -mt-16 flex gap-3.5 px-5">

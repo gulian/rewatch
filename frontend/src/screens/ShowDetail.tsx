@@ -132,7 +132,7 @@ export default function ShowDetail() {
   const airedEps = show.episodes.filter((e) => e.season > 0 && e.airDate && new Date(e.airDate) <= new Date())
   const seenCount = airedEps.filter((e) => watched.has(e.id)).length
   const followState = user?.follow?.state ?? null
-  const isFavorite = user?.follow?.isFavorite ?? false
+  const isFavorite = user?.isFavorite ?? false
   const backdrop = tmdbImage(show.backdropPath, 'w780')
 
   return (
@@ -158,9 +158,8 @@ export default function ShowDetail() {
           type="button"
           onClick={() =>
             tracking.mutate({
-              method: 'put',
-              path: `/api/shows/${showId}/follow`,
-              body: { isFavorite: !isFavorite, ...(followState ? { state: followState } : {}) },
+              method: isFavorite ? 'delete' : 'put',
+              path: `/api/shows/${showId}/favorite`,
             })
           }
           className={`absolute top-3.5 right-4 flex h-8.5 w-8.5 items-center justify-center rounded-full bg-[rgba(9,12,20,.6)] text-[15px] ${

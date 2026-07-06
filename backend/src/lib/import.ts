@@ -121,12 +121,18 @@ async function doImport(jobId: number, userId: number, zipBuffer: Buffer): Promi
     if (!tmdbShowId) continue
     if (!s.isFollowed && !s.isArchived && !s.isForLater) continue // show dropped on the TV Time side
     const state = s.isArchived ? FollowState.ARCHIVED : s.isForLater ? FollowState.FOR_LATER : FollowState.WATCHING
-    const isFavorite = favorites.has(s.tvdbShowId)
     await prisma.follow.upsert({
       where: { userId_showTmdbId: { userId, showTmdbId: tmdbShowId } },
-      create: { userId, showTmdbId: tmdbShowId, state, isFavorite, followedAt: s.followedAt },
-      update: { state, isFavorite },
+      create: { userId, showTmdbId: tmdbShowId, state, followedAt: s.followedAt },
+      update: { state },
     })
+    if (favorites.has(s.tvdbShowId)) {
+      await prisma.favorite.upsert({
+        where: { userId_target_targetRef: { userId, target: 'SHOW', targetRef: tmdbShowId } },
+        create: { userId, target: 'SHOW', targetRef: tmdbShowId },
+        update: {},
+      })
+    }
     follows++
   }
 
