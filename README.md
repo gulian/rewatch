@@ -32,7 +32,7 @@ Installable PWA, multi-user, English and French, dark and light themes.
 - **Trakt.tv sync**: link your account in one tap (device code), import your Trakt history, export Rewatch to Trakt, or mirror your check-ins live in both directions — additions only, nothing ever deletes your data
 - **Up next**: one card per followed show with the next unwatched episode, shows/movies tabs, quick filter
 - **Calendar** of upcoming releases for the shows you follow
-- **Half-star ratings and favorites** on shows and movies, surfaced in stats as your best-of, with a library filter to find them again
+- **Ratings and favorites** on shows and movies, surfaced in stats as your best-of, with a library filter to find them again
 - **Cast** with photos on every show and movie page
 - **Stats**: total screen time, monthly activity, genre breakdown, top shows by time spent, best ratings, favorites
 - **Push notifications** the day an episode airs (Web Push, per-device opt-in)
