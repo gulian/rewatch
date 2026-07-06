@@ -75,7 +75,10 @@
     "markSeasonWatched": "Marquer la saison vue",
     "episodeFallback": "Épisode {{n}}",
     "upcoming": "À venir",
-    "markSeasonUnwatched": "Marquer la saison comme non vue"
+    "markSeasonUnwatched": "Marquer la saison comme non vue",
+    "cast": "Acteurs",
+    "castMore": "Voir tout ({{count}})",
+    "castLess": "Réduire"
   },
   "movie": {
     "kind": "Film",

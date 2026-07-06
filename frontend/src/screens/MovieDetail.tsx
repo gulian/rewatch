@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useMovie, useMovieUser, useTracking } from '../api/hooks'
+import CastSection from '../components/CastSection'
 import { Poster } from '../components/Poster'
 import { Spinner, Stars } from '../components/ui'
 import { frDate, initial, posterColor, runtimeLabel, tmdbImage } from '../lib/format'
@@ -150,6 +151,8 @@ export default function MovieDetail() {
           ))}
         </div>
       )}
+
+      <CastSection kind="movies" tmdbId={movieId} />
 
       {movie.overview && (
         <div className="px-5 pt-4.5">

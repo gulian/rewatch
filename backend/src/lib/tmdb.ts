@@ -96,6 +96,20 @@ export const getSeason = (showTmdbId: number, seasonNumber: number, language?: s
 
 export const getMovie = (tmdbId: number, language?: string) => tmdb<TmdbMovie>(`/movie/${tmdbId}`, {}, language)
 
+export type TmdbCastMember = {
+  name: string
+  profile_path: string | null
+  character?: string
+  roles?: { character: string; episode_count: number }[]
+  order?: number
+}
+
+// aggregate_credits for TV: covers every season, not just the current one.
+export const getShowCredits = (tmdbId: number, language?: string) =>
+  tmdb<{ cast: TmdbCastMember[] }>(`/tv/${tmdbId}/aggregate_credits`, {}, language)
+export const getMovieCredits = (tmdbId: number, language?: string) =>
+  tmdb<{ cast: TmdbCastMember[] }>(`/movie/${tmdbId}/credits`, {}, language)
+
 export const searchMulti = (query: string, language?: string) =>
   tmdb<{ results: TmdbSearchResult[] }>('/search/multi', { query, include_adult: 'false' }, language)
 

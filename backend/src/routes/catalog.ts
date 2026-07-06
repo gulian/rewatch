@@ -40,4 +40,36 @@ export default async function catalogRoutes(app: FastifyInstance) {
     const [localized] = await localizeMovies([await getMovieCached(params.data.id)], request.user!.language)
     return localized
   })
+
+  // Cast (top billing, with photos). Fetched from TMDB on demand with a small
+  // in-process TTL cache: consulted occasionally, not worth persisting.
+  const castCache = new Map<string, { at: number; cast: unknown }>()
+  const CAST_TTL = 24 * 60 * 60 * 1000
+  const CAST_MAX = 500
+
+  for (const kind of ['shows', 'movies'] as const) {
+    app.get(`/api/${kind}/:id/cast`, { preHandler: app.requireAuth }, async (request, reply) => {
+      const params = idParam.safeParse(request.params)
+      if (!params.success) return reply.code(400).send({ error: 'invalid_id' })
+      const key = `${kind}:${params.data.id}`
+      const hit = castCache.get(key)
+      if (hit && Date.now() - hit.at < CAST_TTL) return { cast: hit.cast }
+
+      const credits =
+        kind === 'shows'
+          ? await tmdb.getShowCredits(params.data.id)
+          : await tmdb.getMovieCredits(params.data.id)
+      const cast = (credits.cast ?? [])
+        .slice(0, 12)
+        .map((c) => ({
+          name: c.name,
+          character: c.character ?? c.roles?.[0]?.character ?? null,
+          profilePath: c.profile_path,
+        }))
+
+      if (castCache.size >= CAST_MAX) castCache.delete(castCache.keys().next().value!)
+      castCache.set(key, { at: Date.now(), cast })
+      return { cast }
+    })
+  }
 }

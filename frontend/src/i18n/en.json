@@ -75,7 +75,10 @@
     "markSeasonWatched": "Mark season as watched",
     "episodeFallback": "Episode {{n}}",
     "upcoming": "Upcoming",
-    "markSeasonUnwatched": "Mark season as unwatched"
+    "markSeasonUnwatched": "Mark season as unwatched",
+    "cast": "Cast",
+    "castMore": "Show all ({{count}})",
+    "castLess": "Show less"
   },
   "movie": {
     "kind": "Movie",
