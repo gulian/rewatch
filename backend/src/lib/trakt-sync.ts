@@ -235,10 +235,16 @@ export async function runTraktPull(userId: number): Promise<{ episodes: number; 
     await prisma.traktAccount.update({ where: { userId }, data: { lastPullAt: new Date() } })
     return { skipped: 'baseline_set' }
   }
-  if (latest <= account.lastPullAt.getTime()) return { skipped: 'up_to_date' }
+  // Overlap window: Trakt rounds watched_at to the minute, so a play checked
+  // seconds after a pull can carry a timestamp BEFORE our watermark and would
+  // otherwise be skipped forever. The same-day dedupe below absorbs the
+  // overlap without duplicates.
+  const OVERLAP_MS = 10 * 60_000
+  const since = new Date(account.lastPullAt.getTime() - OVERLAP_MS)
+  if (latest <= since.getTime()) return { skipped: 'up_to_date' }
 
   const pullStartedAt = new Date()
-  const history = await getHistorySince(userId, account.lastPullAt)
+  const history = await getHistorySince(userId, since)
 
   // Cache unknown shows/movies, then insert with a same-day dedupe: our own
   // mirrored pushes come back with second-rounded timestamps, and a strict
