@@ -16,6 +16,7 @@ import pushRoutes from './routes/push.js'
 import settingsRoutes from './routes/settings.js'
 import statsRoutes from './routes/stats.js'
 import trackingRoutes from './routes/tracking.js'
+import traktRoutes from './routes/trakt.js'
 
 export async function buildApp() {
   // trustProxy: behind a reverse proxy the client IP comes from X-Forwarded-For.
@@ -48,6 +49,7 @@ export async function buildApp() {
   await app.register(statsRoutes)
   await app.register(pushRoutes)
   await app.register(settingsRoutes)
+  await app.register(traktRoutes)
 
   // Single-container mode: serve the built frontend from the API process.
   // With a reverse proxy serving the static files, leave STATIC_DIR unset.

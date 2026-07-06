@@ -176,7 +176,9 @@
     "deleteError": "Erreur — compte inchangé",
     "legalLink": "Confidentialité & mentions légales",
     "installRow": "Installer comme une app",
-    "installRowHint": "Icône sur l'écran d'accueil + notifications push"
+    "installRowHint": "Icône sur l'écran d'accueil + notifications push",
+    "traktRow": "Synchro Trakt",
+    "traktRowHint": "Importer, exporter ou refléter ton historique avec Trakt.tv"
   },
   "resolve": {
     "title": "À résoudre",
@@ -333,7 +335,11 @@
     "legalHost": "Hébergeur",
     "legalHostHint": "vide = page légale masquée",
     "legalContact": "Contact opérateur",
-    "legalContactHint": "vide = page légale masquée"
+    "legalContactHint": "vide = page légale masquée",
+    "groupTrakt": "Trakt",
+    "traktClientId": "client id",
+    "traktClientSecret": "client secret",
+    "traktHelp": "Optionnel. Permet aux utilisateurs de se synchroniser avec Trakt.tv : crée une app API (gratuite) sur trakt.tv/oauth/applications avec l'uri de redirection urn:ietf:wg:oauth:2.0:oob."
   },
   "tvhelp": {
     "title": "Récupérer ses données TV Time",
@@ -392,5 +398,36 @@
     "stepPushTitle": "Active les notifications",
     "stepPushText": "Ouvre l'app installée, va dans Profil → Notifications de sortie, et accepte la permission. Tu recevras un push le jour où un épisode sort.",
     "iosPushNote": "Sur iPhone, les notifications demandent iOS 16.4 minimum et ne marchent que depuis l'app installée — pas depuis un onglet Safari. C'est aussi pour ça que le bouton ne fait rien dans le navigateur."
+  },
+  "trakt": {
+    "intro": "Trakt.tv est le service de tracking de référence — Plex, Kodi et beaucoup d'apps l'alimentent automatiquement. Connecte ton compte pour faire circuler ton historique dans les deux sens.",
+    "connected": "connecté",
+    "notConfigured": "Trakt n'est pas configuré sur cette instance",
+    "notConfiguredAdmin": "Crée une app API gratuite sur trakt.tv/oauth/applications, puis colle son client id et son secret dans la console admin (Settings → Trakt).",
+    "notConfiguredUser": "Demande à l'administrateur de cette instance d'activer l'intégration Trakt.",
+    "connectText": "Connecte ton compte Trakt pour importer ton historique, exporter Rewatch vers Trakt, ou refléter tes visionnages en direct.",
+    "connectButton": "Connecter mon compte Trakt",
+    "codeText": "Entre ce code sur trakt.tv/activate :",
+    "openActivate": "Ouvrir trakt.tv/activate",
+    "waiting": "En attente de confirmation…",
+    "disconnect": "Déconnecter Trakt",
+    "disconnectConfirm": "Déconnecter ton compte Trakt ? Le miroir s'arrête ; rien n'est supprimé d'aucun côté.",
+    "importTitle": "Importer depuis Trakt",
+    "importText": "Ramène tout ton historique Trakt dans Rewatch : épisodes et films avec leurs dates, notes, watchlist. Relançable sans risque — pas de doublons.",
+    "exportTitle": "Exporter vers Trakt",
+    "exportText": "Envoie ton historique Rewatch vers Trakt avec les dates d'origine. Ce que Trakt a déjà est ignoré.",
+    "mirrorTitle": "Miroir en direct",
+    "mirrorText": "Chaque épisode ou film coché dans Rewatch part vers Trakt en temps réel (et en est retiré si tu décoches).",
+    "importRunning": "Import depuis Trakt…",
+    "exportRunning": "Export vers Trakt…",
+    "importDone": "Import terminé !",
+    "exportDone": "Export terminé !",
+    "importDoneDetail": "{{episodes}} épisodes et {{movies}} films importés.",
+    "exportDoneDetail": "{{episodes}} épisodes et {{movies}} films ajoutés sur Trakt.",
+    "jobFailed": "Échec de la synchro : {{error}}",
+    "phaseFetch": "Lecture de l'historique Trakt",
+    "phaseShows": "Récupération des séries",
+    "phaseMovies": "Récupération des films",
+    "phasePush": "Envoi vers Trakt"
   }
 }

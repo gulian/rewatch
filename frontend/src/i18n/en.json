@@ -176,7 +176,9 @@
     "deleteError": "Error — account unchanged",
     "legalLink": "Privacy & legal notice",
     "installRow": "Install as an app",
-    "installRowHint": "Home screen icon + push notifications"
+    "installRowHint": "Home screen icon + push notifications",
+    "traktRow": "Trakt sync",
+    "traktRowHint": "Import, export or mirror your history with Trakt.tv"
   },
   "resolve": {
     "title": "To resolve",
@@ -333,7 +335,11 @@
     "legalHost": "Hosting provider",
     "legalHostHint": "leave empty to hide the legal page",
     "legalContact": "Operator contact",
-    "legalContactHint": "leave empty to hide the legal page"
+    "legalContactHint": "leave empty to hide the legal page",
+    "groupTrakt": "Trakt",
+    "traktClientId": "client id",
+    "traktClientSecret": "client secret",
+    "traktHelp": "Optional. Lets users sync with Trakt.tv: create a (free) API app at trakt.tv/oauth/applications with redirect uri urn:ietf:wg:oauth:2.0:oob."
   },
   "tvhelp": {
     "title": "Get your TV Time data",
@@ -392,5 +398,36 @@
     "stepPushTitle": "Turn on notifications",
     "stepPushText": "Open the installed app, go to Profile → Release notifications, and accept the permission. You'll get a push the day a new episode airs.",
     "iosPushNote": "On iPhone, notifications require iOS 16.4 or later and only work from the installed app — not from a Safari tab. That's also why the toggle does nothing in the browser."
+  },
+  "trakt": {
+    "intro": "Trakt.tv is the reference tracking service — Plex, Kodi and many apps feed it automatically. Connect your account to move your history both ways.",
+    "connected": "connected",
+    "notConfigured": "Trakt is not set up on this instance",
+    "notConfiguredAdmin": "Create a free API app on trakt.tv/oauth/applications, then paste its client id and secret in the admin console (Settings → Trakt).",
+    "notConfiguredUser": "Ask the administrator of this instance to enable the Trakt integration.",
+    "connectText": "Connect your Trakt account to import your history, export Rewatch to Trakt, or mirror your check-ins live.",
+    "connectButton": "Connect my Trakt account",
+    "codeText": "Enter this code on trakt.tv/activate:",
+    "openActivate": "Open trakt.tv/activate",
+    "waiting": "Waiting for confirmation…",
+    "disconnect": "Disconnect from Trakt",
+    "disconnectConfirm": "Disconnect your Trakt account? The mirror stops; nothing is deleted on either side.",
+    "importTitle": "Import from Trakt",
+    "importText": "Brings your full Trakt history into Rewatch: episodes and movies with their watch dates, ratings, watchlist. Safe to run again — no duplicates.",
+    "exportTitle": "Export to Trakt",
+    "exportText": "Pushes your Rewatch history to Trakt with the original dates. What Trakt already has is skipped.",
+    "mirrorTitle": "Live mirror",
+    "mirrorText": "Every episode or movie you check in Rewatch is sent to Trakt as it happens (and removed when you uncheck).",
+    "importRunning": "Importing from Trakt…",
+    "exportRunning": "Exporting to Trakt…",
+    "importDone": "Import complete!",
+    "exportDone": "Export complete!",
+    "importDoneDetail": "{{episodes}} episodes and {{movies}} movies imported.",
+    "exportDoneDetail": "{{episodes}} episodes and {{movies}} movies added on Trakt.",
+    "jobFailed": "Sync failed: {{error}}",
+    "phaseFetch": "Reading Trakt history",
+    "phaseShows": "Fetching shows",
+    "phaseMovies": "Fetching movies",
+    "phasePush": "Sending to Trakt"
   }
 }

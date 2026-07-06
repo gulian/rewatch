@@ -289,6 +289,35 @@ function PushFields({ form }: { form: ReturnType<typeof useSettingsForm> }) {
   )
 }
 
+function TraktFields({ form }: { form: ReturnType<typeof useSettingsForm> }) {
+  const { t } = useTranslation()
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="text-[10.5px] leading-relaxed text-[var(--ops-dim)]">{t('ops.traktHelp')}</div>
+      <div>
+        <Label text={t('ops.traktClientId')} hint={form.get('TRAKT_CLIENT_ID')?.envLocked ? t('ops.envLocked') : undefined} />
+        <input
+          className={field}
+          disabled={form.get('TRAKT_CLIENT_ID')?.envLocked}
+          value={form.shown('TRAKT_CLIENT_ID')}
+          onChange={(e) => form.edit('TRAKT_CLIENT_ID', e.target.value)}
+        />
+      </div>
+      <div>
+        <Label text={t('ops.traktClientSecret')} hint={form.get('TRAKT_CLIENT_SECRET')?.set ? t('ops.secretSet') : undefined} />
+        <input
+          className={field}
+          type="password"
+          placeholder={form.get('TRAKT_CLIENT_SECRET')?.set ? '••••••••' : ''}
+          disabled={form.get('TRAKT_CLIENT_SECRET')?.envLocked}
+          value={form.shown('TRAKT_CLIENT_SECRET')}
+          onChange={(e) => form.edit('TRAKT_CLIENT_SECRET', e.target.value)}
+        />
+      </div>
+    </div>
+  )
+}
+
 // ——— Console panel ———
 
 export function SettingsPanel() {
@@ -301,6 +330,7 @@ export function SettingsPanel() {
     [t('ops.groupInstance'), <InstanceFields key="i" form={form} withLegal />],
     [t('ops.groupEmail'), <EmailFields key="e" form={form} />],
     [t('ops.groupPush'), <PushFields key="p" form={form} />],
+    [t('ops.groupTrakt'), <TraktFields key="k" form={form} />],
   ]
 
   return (

@@ -2,6 +2,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
+import { mirrorBulkToTrakt, mirrorToTrakt } from '../lib/trakt-sync.js'
 import { getMovieCached, getShowCached } from '../lib/catalog.js'
 import { FollowState } from '../generated/prisma/client.js'
 
@@ -61,10 +62,12 @@ export default async function trackingRoutes(app: FastifyInstance) {
     const episode = await prisma.episode.findUnique({ where: { id: params.data.id } })
     if (!episode) return reply.code(404).send({ error: 'not_found' })
 
+    const watchedAt = body.data.watchedAt ?? new Date()
     await prisma.watchEvent.create({
-      data: { userId: request.user!.id, episodeId: episode.id, watchedAt: body.data.watchedAt ?? new Date() },
+      data: { userId: request.user!.id, episodeId: episode.id, watchedAt },
     })
     await ensureFollowed(request.user!.id, episode.showTmdbId)
+    mirrorToTrakt(request.user!.id, 'add', { kind: 'episode', showTmdbId: episode.showTmdbId, season: episode.season, number: episode.number, watchedAt })
     return { ok: true }
   })
 
@@ -72,9 +75,14 @@ export default async function trackingRoutes(app: FastifyInstance) {
   app.delete('/api/episodes/:id/watch', { preHandler: app.requireAuth }, async (request, reply) => {
     const params = idParam.safeParse(request.params)
     if (!params.success) return reply.code(400).send({ error: 'invalid_id' })
-    await prisma.watchEvent.deleteMany({
+    const deleted = await prisma.watchEvent.deleteMany({
       where: { userId: request.user!.id, episodeId: params.data.id },
     })
+    if (deleted.count > 0) {
+      const episode = await prisma.episode.findUnique({ where: { id: params.data.id } })
+      if (episode)
+        mirrorToTrakt(request.user!.id, 'remove', { kind: 'episode', showTmdbId: episode.showTmdbId, season: episode.season, number: episode.number })
+    }
     return { ok: true }
   })
 
@@ -102,7 +110,7 @@ export default async function trackingRoutes(app: FastifyInstance) {
               OR: [{ season: { lt: upTo!.season } }, { number: { lte: upTo!.number } }],
             }),
       },
-      select: { id: true },
+      select: { id: true, season: true, number: true },
     })
 
     // No rewatches created: only never-watched episodes get marked.
@@ -111,12 +119,15 @@ export default async function trackingRoutes(app: FastifyInstance) {
       select: { episodeId: true },
     })
     const seenIds = new Set(seen.map((s) => s.episodeId))
+    const now = new Date()
+    const fresh = episodes.filter((e) => !seenIds.has(e.id))
     const created = await prisma.watchEvent.createMany({
-      data: episodes
-        .filter((e) => !seenIds.has(e.id))
-        .map((e) => ({ userId: request.user!.id, episodeId: e.id, watchedAt: new Date() })),
+      data: fresh.map((e) => ({ userId: request.user!.id, episodeId: e.id, watchedAt: now })),
     })
-    if (created.count > 0) await ensureFollowed(request.user!.id, params.data.id)
+    if (created.count > 0) {
+      await ensureFollowed(request.user!.id, params.data.id)
+      mirrorBulkToTrakt(request.user!.id, params.data.id, fresh, now)
+    }
     return { marked: created.count }
   })
 
@@ -128,9 +139,11 @@ export default async function trackingRoutes(app: FastifyInstance) {
     if (!params.success || !body.success) return reply.code(400).send({ error: 'invalid_input' })
 
     await getMovieCached(params.data.id)
+    const movieWatchedAt = body.data.watchedAt ?? new Date()
     await prisma.watchEvent.create({
-      data: { userId: request.user!.id, movieId: params.data.id, watchedAt: body.data.watchedAt ?? new Date() },
+      data: { userId: request.user!.id, movieId: params.data.id, watchedAt: movieWatchedAt },
     })
+    mirrorToTrakt(request.user!.id, 'add', { kind: 'movie', movieTmdbId: params.data.id, watchedAt: movieWatchedAt })
     // Watched → drops off the watchlist.
     await prisma.movieWatchlistEntry.deleteMany({
       where: { userId: request.user!.id, movieTmdbId: params.data.id },
@@ -141,9 +154,10 @@ export default async function trackingRoutes(app: FastifyInstance) {
   app.delete('/api/movies/:id/watch', { preHandler: app.requireAuth }, async (request, reply) => {
     const params = idParam.safeParse(request.params)
     if (!params.success) return reply.code(400).send({ error: 'invalid_id' })
-    await prisma.watchEvent.deleteMany({
+    const deleted = await prisma.watchEvent.deleteMany({
       where: { userId: request.user!.id, movieId: params.data.id },
     })
+    if (deleted.count > 0) mirrorToTrakt(request.user!.id, 'remove', { kind: 'movie', movieTmdbId: params.data.id })
     return { ok: true }
   })
 

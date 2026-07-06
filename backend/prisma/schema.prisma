@@ -30,8 +30,25 @@ model User {
   movieWatchlist MovieWatchlistEntry[]
   ratings       Rating[]
   pushSubscriptions PushSubscription[]
+  traktAccount  TraktAccount?
 
   @@map("users")
+}
+
+// Per-user Trakt connection (OAuth device flow tokens).
+model TraktAccount {
+  userId        Int      @id @map("user_id")
+  accessToken   String   @map("access_token")
+  refreshToken  String   @map("refresh_token")
+  expiresAt     DateTime @map("expires_at")
+  username      String? // Trakt slug, for display
+  // V2: forward every watch/unwatch to Trakt as it happens.
+  mirrorEnabled Boolean  @default(false) @map("mirror_enabled")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("trakt_accounts")
 }
 
 model Session {
@@ -253,6 +270,8 @@ enum ImportJobStatus {
 model ImportJob {
   id        Int             @id @default(autoincrement())
   userId    Int             @map("user_id")
+  // What the job does: TVTIME (zip import), TRAKT (API import), TRAKT_EXPORT.
+  source    String          @default("TVTIME")
   status    ImportJobStatus @default(RUNNING)
   progress  Json? // { phase, done, total }
   report    Json? // final counters

@@ -28,6 +28,8 @@ const valueSchemas: Record<SettingKey, z.ZodType<string>> = {
   REGISTRATION_ENABLED: z.enum(['true', 'false']),
   LEGAL_HOST: z.string().max(300),
   LEGAL_CONTACT: z.string().max(320),
+  TRAKT_CLIENT_ID: z.string().max(100),
+  TRAKT_CLIENT_SECRET: z.string().max(100),
 }
 
 export default async function settingsRoutes(app: FastifyInstance) {

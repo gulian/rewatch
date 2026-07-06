@@ -19,11 +19,13 @@ export const SETTING_KEYS = [
   'REGISTRATION_ENABLED',
   'LEGAL_HOST',
   'LEGAL_CONTACT',
+  'TRAKT_CLIENT_ID',
+  'TRAKT_CLIENT_SECRET',
 ] as const
 export type SettingKey = (typeof SETTING_KEYS)[number]
 
 // Never returned to the client, even to admins — only a "set" flag is.
-export const SECRET_KEYS: readonly SettingKey[] = ['TMDB_API_TOKEN', 'SMTP_PASS', 'VAPID_PRIVATE_KEY']
+export const SECRET_KEYS: readonly SettingKey[] = ['TMDB_API_TOKEN', 'SMTP_PASS', 'VAPID_PRIVATE_KEY', 'TRAKT_CLIENT_SECRET']
 
 const cache = new Map<string, string>()
 const listeners: Array<() => void> = []

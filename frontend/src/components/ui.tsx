@@ -11,6 +11,19 @@ export function ScreenTitle({ title, aside }: { title: string; aside?: React.Rea
   )
 }
 
+export function Toggle({ on, onChange, disabled }: { on: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onChange(!on)}
+      className={`relative h-6 w-10.5 flex-none rounded-full transition-colors ${on ? 'bg-accent' : 'bg-track'} disabled:opacity-50`}
+    >
+      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${on ? 'left-5' : 'left-0.5'}`} />
+    </button>
+  )
+}
+
 export function ProgressBar({ pct, className = 'h-1' }: { pct: number; className?: string }) {
   // A full bar means "all caught up" — switch from accent to green.
   return (

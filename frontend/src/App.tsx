@@ -18,6 +18,7 @@ import Resolve from './screens/Resolve'
 import Search from './screens/Search'
 import ShowDetail from './screens/ShowDetail'
 import Stats from './screens/Stats'
+import Trakt from './screens/Trakt'
 import TvTimeHelp from './screens/TvTimeHelp'
 import UpNext from './screens/UpNext'
 
@@ -82,6 +83,7 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/import/tvtime" element={<TvTimeHelp />} />
         <Route path="/install" element={<Install />} />
+        <Route path="/trakt" element={<Trakt />} />
         <Route path="/resolve" element={<Resolve />} />
       </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

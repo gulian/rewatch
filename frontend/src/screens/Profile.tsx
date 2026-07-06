@@ -580,6 +580,18 @@ export default function Profile() {
 
         <ImportCard />
 
+        <Link
+          viewTransition
+          to="/trakt"
+          className="bg-card flex items-center justify-between rounded-[18px] border border-line px-4 py-3.5"
+        >
+          <div>
+            <div className="text-sm font-semibold">{t('profile.traktRow')}</div>
+            <div className="text-dim mt-0.5 text-[11.5px] font-semibold">{t('profile.traktRowHint')}</div>
+          </div>
+          <span className="text-dim">›</span>
+        </Link>
+
         <div className="bg-card overflow-hidden rounded-[18px] border border-line">
           <div className="text-dim px-4 py-3.25 text-xs font-extrabold tracking-widest uppercase">{t('profile.account')}</div>
           <button
