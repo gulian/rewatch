@@ -51,7 +51,7 @@ export default function StateMenu({
                 setOpen(false)
                 onRemove()
               }}
-              className="text-muted w-full border-t border-line px-4 py-2.75 text-left text-[13px] font-bold"
+              className="text-danger w-full border-t border-line px-4 py-2.75 text-left text-[13px] font-bold"
             >
               {removeLabel}
             </button>
