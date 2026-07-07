@@ -63,7 +63,10 @@
     "watchlistMovies": "Films pour plus tard",
     "filterFavorites": "Favoris",
     "favoriteMovies": "Films favoris",
-    "archivedMovies": "Films archivés"
+    "archivedMovies": "Films archivés",
+    "filterWatched": "Vus",
+    "finishedShows": "Séries terminées",
+    "watchedMovies": "Films vus"
   },
   "show": {
     "watching": "En cours",

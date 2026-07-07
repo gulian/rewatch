@@ -15,6 +15,7 @@ import type {
   ShowUser,
   Stats,
   User,
+  WatchedLibrary,
   Watchlist,
  Highlights, } from './types'
 
@@ -29,6 +30,9 @@ export function useMe() {
 
 export const useWatchlist = () =>
   useQuery({ queryKey: ['watchlist'], queryFn: () => api.get<Watchlist>('/api/watchlist') })
+
+export const useWatched = () =>
+  useQuery({ queryKey: ['watched'], queryFn: () => api.get<WatchedLibrary>('/api/library/watched') })
 
 export const useCalendar = () =>
   useQuery({ queryKey: ['calendar'], queryFn: () => api.get<CalendarEpisode[]>('/api/calendar?days=60') })
@@ -103,7 +107,7 @@ export function useTracking() {
   const invalidate = () =>
     qc.invalidateQueries({
       predicate: (q) =>
-        ['watchlist', 'calendar', 'library', 'stats', 'show-user', 'movie-user', 'pending', 'highlights'].includes(
+        ['watchlist', 'watched', 'calendar', 'library', 'stats', 'show-user', 'movie-user', 'pending', 'highlights'].includes(
           q.queryKey[0] as string,
         ),
     })

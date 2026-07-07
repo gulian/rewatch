@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useHighlights, useLibrary, useSearch, useTracking, useWatchlist } from '../api/hooks'
+import { useHighlights, useLibrary, useSearch, useTracking, useWatched, useWatchlist } from '../api/hooks'
 import { Poster } from '../components/Poster'
 import { ProgressBar, ScreenTitle, Spinner } from '../components/ui'
+import { frDate } from '../lib/format'
 
 function SearchIcon({ active }: { active: boolean }) {
   return (
@@ -82,23 +83,33 @@ function ResultCard({
   )
 }
 
-type LibraryFilter = 'ALL' | 'WATCHING' | 'FOR_LATER' | 'ARCHIVED' | 'FAVORITES'
+type LibraryFilter = 'ALL' | 'WATCHING' | 'FOR_LATER' | 'ARCHIVED' | 'WATCHED' | 'FAVORITES'
 
-function MovieGrid({ title, movies }: { title: string; movies: { tmdbId: number; title: string; posterPath: string | null }[] }) {
+function PosterGrid({
+  title,
+  items,
+}: {
+  title: string
+  items: { to: string; title: string; posterPath: string | null; subtitle?: string }[]
+}) {
   return (
     <>
       <div className="px-1 pt-2 text-base font-extrabold">{title}</div>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-        {movies.map((m) => (
-          <Link viewTransition key={m.tmdbId} to={`/movie/${m.tmdbId}`} className="flex flex-col gap-1.5">
-            <Poster path={m.posterPath} title={m.title} size="w185" className="aspect-[2/3] w-full rounded-[13px] text-base" />
-            <div className="truncate text-[11px] font-semibold">{m.title}</div>
+        {items.map((it) => (
+          <Link viewTransition key={it.to} to={it.to} className="flex flex-col gap-1.5">
+            <Poster path={it.posterPath} title={it.title} size="w185" className="aspect-[2/3] w-full rounded-[13px] text-base" />
+            <div className="truncate text-[11px] font-semibold">{it.title}</div>
+            {it.subtitle && <div className="text-muted -mt-1 truncate text-[10px] font-semibold">{it.subtitle}</div>}
           </Link>
         ))}
       </div>
     </>
   )
 }
+
+const movieItems = (movies: { tmdbId: number; title: string; posterPath: string | null }[]) =>
+  movies.map((m) => ({ to: `/movie/${m.tmdbId}`, title: m.title, posterPath: m.posterPath }))
 
 export default function Search() {
   const { t } = useTranslation()
@@ -107,30 +118,38 @@ export default function Search() {
   const search = useSearch(q)
   const library = useLibrary()
   const { data: watchlist } = useWatchlist()
+  const watched = useWatched()
   const { data: highlights } = useHighlights()
   const favoriteMovies = (highlights?.favorites ?? []).filter((c) => c.kind === 'movie')
   const searching = q.trim().length > 0
 
   const filteredLibrary = (library.data ?? []).filter((l) =>
-    filter === 'ALL' ? true : filter === 'FAVORITES' ? l.isFavorite : l.state === filter,
+    filter === 'ALL' ? true : filter === 'FAVORITES' ? l.isFavorite : filter === 'WATCHED' ? false : l.state === filter,
   )
   const forLaterMovies = watchlist?.movies ?? []
   const archivedMovies = watchlist?.archivedMovies ?? []
+  const finishedShows = watched.data?.finishedShows ?? []
+  const watchedMovies = watched.data?.movies ?? []
   const showForLaterMovies = (filter === 'ALL' || filter === 'FOR_LATER') && forLaterMovies.length > 0
   const showArchivedMovies = (filter === 'ALL' || filter === 'ARCHIVED') && archivedMovies.length > 0
   const showFavoriteMovies = filter === 'FAVORITES' && favoriteMovies.length > 0
+  const showFinishedShows = filter === 'WATCHED' && finishedShows.length > 0
+  const showWatchedMovies = filter === 'WATCHED' && watchedMovies.length > 0
   // The library block exists as soon as there is anything in it — a movies-only
   // account must see it too, not just people following shows.
   const hasLibrary =
     (library.data?.length ?? 0) > 0 ||
     forLaterMovies.length > 0 ||
     archivedMovies.length > 0 ||
-    favoriteMovies.length > 0
+    favoriteMovies.length > 0 ||
+    finishedShows.length > 0 ||
+    watchedMovies.length > 0
   const chips: [LibraryFilter, string][] = [
     ['ALL', t('search.filterAll')],
     ['WATCHING', t('search.filterWatching')],
     ['FOR_LATER', t('search.filterForLater')],
     ['ARCHIVED', t('search.filterArchived')],
+    ['WATCHED', t('search.filterWatched')],
     ['FAVORITES', `♥ ${t('search.filterFavorites')}`],
   ]
 
@@ -213,13 +232,38 @@ export default function Search() {
               hasLibrary &&
               !showForLaterMovies &&
               !showArchivedMovies &&
-              !showFavoriteMovies && (
+              !showFavoriteMovies &&
+              !showFinishedShows &&
+              !showWatchedMovies &&
+              !(filter === 'WATCHED' && watched.isLoading) && (
                 <div className="text-dim col-span-full py-8 text-center text-sm">{t('search.filterEmpty')}</div>
               )}
           </div>
-          {showFavoriteMovies && <MovieGrid title={t('search.favoriteMovies')} movies={favoriteMovies} />}
-          {showForLaterMovies && <MovieGrid title={t('search.watchlistMovies')} movies={forLaterMovies} />}
-          {showArchivedMovies && <MovieGrid title={t('search.archivedMovies')} movies={archivedMovies} />}
+          {showFavoriteMovies && <PosterGrid title={t('search.favoriteMovies')} items={movieItems(favoriteMovies)} />}
+          {showForLaterMovies && <PosterGrid title={t('search.watchlistMovies')} items={movieItems(forLaterMovies)} />}
+          {showArchivedMovies && <PosterGrid title={t('search.archivedMovies')} items={movieItems(archivedMovies)} />}
+          {showFinishedShows && (
+            <PosterGrid
+              title={t('search.finishedShows')}
+              items={finishedShows.map((s) => ({
+                to: `/show/${s.tmdbId}`,
+                title: s.name,
+                posterPath: s.posterPath,
+                subtitle: s.lastWatchedAt ? frDate(s.lastWatchedAt) : undefined,
+              }))}
+            />
+          )}
+          {showWatchedMovies && (
+            <PosterGrid
+              title={t('search.watchedMovies')}
+              items={watchedMovies.map((m) => ({
+                to: `/movie/${m.tmdbId}`,
+                title: m.title,
+                posterPath: m.posterPath,
+                subtitle: frDate(m.lastWatchedAt),
+              }))}
+            />
+          )}
         </div>
       )}
     </div>

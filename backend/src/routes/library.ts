@@ -113,6 +113,66 @@ export default async function libraryRoutes(app: FastifyInstance) {
     }
   })
 
+  // "Watched" library view: finished shows (ended + fully seen) and watched movies.
+  app.get('/api/library/watched', { preHandler: app.requireAuth }, async (request) => {
+    const userId = request.user!.id
+    const lang = request.user!.language
+
+    const showRows = await prisma.$queryRaw<{ show_tmdb_id: number; last_watched_at: Date | null }[]>(Prisma.sql`
+      WITH counts AS (
+        SELECT f.show_tmdb_id,
+          (SELECT count(*) FROM episodes e
+            WHERE e.show_tmdb_id = f.show_tmdb_id AND e.season > 0 AND e.air_date <= now()) AS aired,
+          (SELECT count(DISTINCT w.episode_id) FROM watch_events w
+            JOIN episodes e ON e.id = w.episode_id
+            WHERE w.user_id = ${userId} AND e.show_tmdb_id = f.show_tmdb_id
+              AND e.season > 0 AND e.air_date <= now()) AS seen,
+          (SELECT max(w.watched_at) FROM watch_events w
+            JOIN episodes e ON e.id = w.episode_id
+            WHERE w.user_id = ${userId} AND e.show_tmdb_id = f.show_tmdb_id) AS last_watched_at
+        FROM follows f
+        JOIN shows s ON s.tmdb_id = f.show_tmdb_id
+        WHERE f.user_id = ${userId} AND s.status IN ('Ended', 'Canceled')
+      )
+      SELECT show_tmdb_id, last_watched_at FROM counts
+      WHERE aired > 0 AND seen = aired
+      ORDER BY last_watched_at DESC NULLS LAST
+    `)
+    const showById = new Map(
+      (
+        await localizeShows(
+          await prisma.show.findMany({ where: { tmdbId: { in: showRows.map((r) => r.show_tmdb_id) } } }),
+          lang,
+        )
+      ).map((s) => [s.tmdbId, s]),
+    )
+
+    const movieRows = await prisma.$queryRaw<{ movie_id: number; last_watched_at: Date }[]>(Prisma.sql`
+      SELECT w.movie_id, max(w.watched_at) AS last_watched_at
+      FROM watch_events w
+      WHERE w.user_id = ${userId} AND w.movie_id IS NOT NULL
+      GROUP BY w.movie_id
+      ORDER BY last_watched_at DESC
+    `)
+    const movieById = new Map(
+      (
+        await localizeMovies(
+          await prisma.movie.findMany({ where: { tmdbId: { in: movieRows.map((r) => r.movie_id) } } }),
+          lang,
+        )
+      ).map((m) => [m.tmdbId, m]),
+    )
+
+    return {
+      finishedShows: showRows
+        .filter((r) => showById.has(r.show_tmdb_id))
+        .map((r) => ({ ...showById.get(r.show_tmdb_id)!, lastWatchedAt: r.last_watched_at })),
+      movies: movieRows
+        .filter((r) => movieById.has(r.movie_id))
+        .map((r) => ({ ...movieById.get(r.movie_id)!, lastWatchedAt: r.last_watched_at })),
+    }
+  })
+
   // "Your shows" (search + library): follows with watched/aired progress.
   app.get('/api/library/shows', { preHandler: app.requireAuth }, async (request) => {
     const userId = request.user!.id

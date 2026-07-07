@@ -60,6 +60,10 @@ export type WatchlistShow = {
   lastWatchedAt: string | null
 }
 export type Watchlist = { shows: WatchlistShow[]; movies: Movie[]; archivedMovies: Movie[] }
+export type WatchedLibrary = {
+  finishedShows: (Show & { lastWatchedAt: string | null })[]
+  movies: (Movie & { lastWatchedAt: string })[]
+}
 
 export type CalendarEpisode = Episode & { show: Pick<Show, 'tmdbId' | 'name' | 'posterPath'> & { network?: string | null } }
 

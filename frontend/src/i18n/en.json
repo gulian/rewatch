@@ -63,7 +63,10 @@
     "watchlistMovies": "Movies for later",
     "filterFavorites": "Favorites",
     "favoriteMovies": "Favorite movies",
-    "archivedMovies": "Archived movies"
+    "archivedMovies": "Archived movies",
+    "filterWatched": "Watched",
+    "finishedShows": "Finished shows",
+    "watchedMovies": "Watched movies"
   },
   "show": {
     "watching": "Watching",
