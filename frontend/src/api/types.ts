@@ -59,7 +59,7 @@ export type WatchlistShow = {
   totalRemaining: number
   lastWatchedAt: string | null
 }
-export type Watchlist = { shows: WatchlistShow[]; movies: Movie[] }
+export type Watchlist = { shows: WatchlistShow[]; movies: Movie[]; archivedMovies: Movie[] }
 
 export type CalendarEpisode = Episode & { show: Pick<Show, 'tmdbId' | 'name' | 'posterPath'> & { network?: string | null } }
 
@@ -81,7 +81,7 @@ export type LibraryShow = {
 
 export type ShowDetail = Show & { episodes: Episode[] }
 export type ShowUser = { follow: Follow | null; rating: number | null; isFavorite: boolean; watchedEpisodeIds: number[] }
-export type MovieUser = { watchedAts: string[]; inWatchlist: boolean; rating: number | null; isFavorite: boolean }
+export type MovieUser = { watchedAts: string[]; watchlistState: FollowState | null; rating: number | null; isFavorite: boolean }
 
 export type Stats = {
   totalMinutes: number

@@ -91,7 +91,8 @@ export default async function libraryRoutes(app: FastifyInstance) {
       include: { movie: true },
       orderBy: { addedAt: 'desc' },
     })
-    const movies = await localizeMovies(entries.map((m) => m.movie), lang)
+    const movies = await localizeMovies(entries.filter((m) => m.state === 'FOR_LATER').map((m) => m.movie), lang)
+    const archivedMovies = await localizeMovies(entries.filter((m) => m.state === 'ARCHIVED').map((m) => m.movie), lang)
 
     return {
       shows: rows.map((r) => ({
@@ -108,6 +109,7 @@ export default async function libraryRoutes(app: FastifyInstance) {
         lastWatchedAt: r.last_watched_at,
       })),
       movies,
+      archivedMovies,
     }
   })
 
@@ -278,7 +280,7 @@ export default async function libraryRoutes(app: FastifyInstance) {
 
     return {
       watchedAts: events.map((e) => e.watchedAt),
-      inWatchlist: entry !== null,
+      watchlistState: entry?.state ?? null,
       rating: rating?.value ?? null,
       isFavorite: favorite !== null,
     }

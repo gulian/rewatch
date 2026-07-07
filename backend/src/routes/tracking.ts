@@ -207,12 +207,13 @@ export default async function trackingRoutes(app: FastifyInstance) {
 
   app.put('/api/movies/:id/watchlist', { preHandler: app.requireAuth }, async (request, reply) => {
     const params = idParam.safeParse(request.params)
-    if (!params.success) return reply.code(400).send({ error: 'invalid_id' })
+    const body = z.object({ state: z.enum(['FOR_LATER', 'ARCHIVED']).default('FOR_LATER') }).safeParse(request.body ?? {})
+    if (!params.success || !body.success) return reply.code(400).send({ error: 'invalid_input' })
     await getMovieCached(params.data.id)
     await prisma.movieWatchlistEntry.upsert({
       where: { userId_movieTmdbId: { userId: request.user!.id, movieTmdbId: params.data.id } },
-      create: { userId: request.user!.id, movieTmdbId: params.data.id },
-      update: {},
+      create: { userId: request.user!.id, movieTmdbId: params.data.id, state: body.data.state },
+      update: { state: body.data.state },
     })
     return { ok: true }
   })

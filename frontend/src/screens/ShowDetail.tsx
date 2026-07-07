@@ -5,6 +5,7 @@ import { useShow, useShowUser, useTracking } from '../api/hooks'
 import type { Episode, FollowState } from '../api/types'
 import CastSection from '../components/CastSection'
 import { Poster } from '../components/Poster'
+import StateMenu from '../components/StateMenu'
 import { Spinner, Stars } from '../components/ui'
 import { frDate, initial, posterColor, tmdbImage } from '../lib/format'
 import { buzz } from '../lib/haptics'
@@ -130,7 +131,6 @@ export default function ShowDetail() {
   const { data: show, isLoading } = useShow(showId)
   const { data: user } = useShowUser(showId)
   const tracking = useTracking()
-  const [stateMenuOpen, setStateMenuOpen] = useState(false)
 
   const watched = useMemo(() => new Set(user?.watchedEpisodeIds ?? []), [user])
   const seasons = useMemo(() => {
@@ -249,52 +249,18 @@ export default function ShowDetail() {
                 {t('show.upToDate')}
               </div>
             )}
-            <div className="relative flex-none">
-              <button
-                type="button"
-                onClick={() => setStateMenuOpen(!stateMenuOpen)}
-                className="border-accent text-accent rounded-xl border-[1.5px] px-3.5 py-2.75 text-[13px] font-bold"
-              >
-                {t(STATES.find((s) => s.key === followState)?.labelKey ?? 'show.watching')} ▾
-              </button>
-              {stateMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setStateMenuOpen(false)} />
-                  <div className="bg-card absolute top-full right-0 z-20 mt-2 w-48 overflow-hidden rounded-xl border border-line shadow-[0_10px_30px_rgba(0,0,0,.35)]">
-                    {STATES.map((s) => {
-                      const active = followState === s.key
-                      return (
-                        <button
-                          key={s.key}
-                          type="button"
-                          onClick={() => {
-                            setStateMenuOpen(false)
-                            if (!active)
-                              tracking.mutate({ method: 'put', path: `/api/shows/${showId}/follow`, body: { state: s.key } })
-                          }}
-                          className={`flex w-full items-center justify-between px-4 py-2.75 text-left text-[13px] ${
-                            active ? 'text-accent font-extrabold' : 'text-text font-bold'
-                          }`}
-                        >
-                          {t(s.labelKey)}
-                          {active && <span>✓</span>}
-                        </button>
-                      )
-                    })}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStateMenuOpen(false)
-                        tracking.mutate({ method: 'delete', path: `/api/shows/${showId}/follow` })
-                      }}
-                      className="text-muted w-full border-t border-line px-4 py-2.75 text-left text-[13px] font-bold"
-                    >
-                      {t('show.unfollow')}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+            <StateMenu
+              label={t(STATES.find((s) => s.key === followState)?.labelKey ?? 'show.watching')}
+              options={STATES.map((s) => ({
+                key: s.key,
+                label: t(s.labelKey),
+                active: followState === s.key,
+                onSelect: () =>
+                  tracking.mutate({ method: 'put', path: `/api/shows/${showId}/follow`, body: { state: s.key } }),
+              }))}
+              removeLabel={t('show.unfollow')}
+              onRemove={() => tracking.mutate({ method: 'delete', path: `/api/shows/${showId}/follow` })}
+            />
           </>
         )}
       </div>

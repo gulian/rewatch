@@ -62,7 +62,8 @@
     "badgeArchived": "archived",
     "watchlistMovies": "Movies for later",
     "filterFavorites": "Favorites",
-    "favoriteMovies": "Favorite movies"
+    "favoriteMovies": "Favorite movies",
+    "archivedMovies": "Archived movies"
   },
   "show": {
     "watching": "Watching",
@@ -89,9 +90,10 @@
     "watchedOn": "✓ Watched on {{date}}",
     "markWatched": "✓ Mark as watched",
     "rewatched": "↻ Rewatched",
-    "inWatchlist": "✓ For later",
-    "addToWatchlist": "For later",
-    "synopsis": "Synopsis"
+    "synopsis": "Synopsis",
+    "forLater": "For later",
+    "archived": "Archived",
+    "removeFromList": "Remove from my list"
   },
   "stats": {
     "title": "Stats",

@@ -211,6 +211,19 @@ export default function Search() {
               </div>
             </>
           )}
+          {filter === 'ARCHIVED' && (watchlist?.archivedMovies.length ?? 0) > 0 && (
+            <>
+              <div className="px-1 pt-2 text-base font-extrabold">{t('search.archivedMovies')}</div>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+                {watchlist!.archivedMovies.map((m) => (
+                  <Link viewTransition key={m.tmdbId} to={`/movie/${m.tmdbId}`} className="flex flex-col gap-1.5">
+                    <Poster path={m.posterPath} title={m.title} size="w185" className="aspect-[2/3] w-full rounded-[13px] text-base" />
+                    <div className="truncate text-[11px] font-semibold">{m.title}</div>
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

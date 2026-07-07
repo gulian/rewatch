@@ -252,6 +252,8 @@ model WatchEvent {
 model MovieWatchlistEntry {
   userId     Int      @map("user_id")
   movieTmdbId Int     @map("movie_tmdb_id")
+  // Movies only use FOR_LATER and ARCHIVED (there is no "watching" a movie).
+  state      FollowState @default(FOR_LATER)
   addedAt    DateTime @default(now()) @map("added_at")
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)

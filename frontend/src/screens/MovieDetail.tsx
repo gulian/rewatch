@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useMovie, useMovieUser, useTracking } from '../api/hooks'
 import CastSection from '../components/CastSection'
 import { Poster } from '../components/Poster'
+import StateMenu from '../components/StateMenu'
 import { Spinner, Stars } from '../components/ui'
 import { frDate, initial, posterColor, runtimeLabel, tmdbImage } from '../lib/format'
 import { buzz } from '../lib/haptics'
@@ -124,20 +125,35 @@ export default function MovieDetail() {
             >
               {t('movie.markWatched')}
             </button>
-            <button
-              type="button"
-              onClick={() =>
-                tracking.mutate({
-                  method: user?.inWatchlist ? 'delete' : 'put',
-                  path: `/api/movies/${movieId}/watchlist`,
-                })
-              }
-              className={`flex-none rounded-xl border-[1.5px] px-3.5 py-2.75 text-[13px] font-bold ${
-                user?.inWatchlist ? 'border-accent text-accent' : 'border-border text-muted'
-              }`}
-            >
-              {user?.inWatchlist ? t('movie.inWatchlist') : t('movie.addToWatchlist')}
-            </button>
+            {user?.watchlistState ? (
+              <StateMenu
+                label={t(user.watchlistState === 'ARCHIVED' ? 'movie.archived' : 'movie.forLater')}
+                options={(
+                  [
+                    ['FOR_LATER', 'movie.forLater'],
+                    ['ARCHIVED', 'movie.archived'],
+                  ] as const
+                ).map(([state, labelKey]) => ({
+                  key: state,
+                  label: t(labelKey),
+                  active: user.watchlistState === state,
+                  onSelect: () =>
+                    tracking.mutate({ method: 'put', path: `/api/movies/${movieId}/watchlist`, body: { state } }),
+                }))}
+                removeLabel={t('movie.removeFromList')}
+                onRemove={() => tracking.mutate({ method: 'delete', path: `/api/movies/${movieId}/watchlist` })}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() =>
+                  tracking.mutate({ method: 'put', path: `/api/movies/${movieId}/watchlist`, body: { state: 'FOR_LATER' } })
+                }
+                className="border-border text-muted flex-none rounded-xl border-[1.5px] px-3.5 py-2.75 text-[13px] font-bold"
+              >
+                {t('movie.forLater')}
+              </button>
+            )}
           </>
         )}
       </div>
