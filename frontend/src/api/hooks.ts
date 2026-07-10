@@ -3,7 +3,8 @@ import { api, ApiError } from './client'
 import type {
   AdminOverview,
   AdminSetting,
-  AdminUser,
+  AdminUsersPage,
+  AdminUsersQuery,
   CalendarEpisode,
   ImportJob,
   LibraryShow,
@@ -98,8 +99,24 @@ export const useLegalInfo = () =>
 export const useAdminSettings = () =>
   useQuery({ queryKey: ['admin-settings'], queryFn: () => api.get<AdminSetting[]>('/api/admin/settings') })
 
-export const useAdminUsers = () =>
-  useQuery({ queryKey: ['admin-users'], queryFn: () => api.get<AdminUser[]>('/api/admin/users') })
+export const useAdminUsers = (params: AdminUsersQuery) =>
+  useQuery({
+    queryKey: ['admin-users', params],
+    queryFn: () => {
+      const qs = new URLSearchParams({
+        page: String(params.page),
+        pageSize: String(params.pageSize),
+        sort: params.sort,
+        dir: params.dir,
+        status: params.status,
+        role: params.role,
+      })
+      if (params.search) qs.set('search', params.search)
+      return api.get<AdminUsersPage>(`/api/admin/users?${qs.toString()}`)
+    },
+    // Keep the current page on screen while the next one loads (no flash to empty).
+    placeholderData: (prev) => prev,
+  })
 
 /** Generic mutation: invalidates user-dependent caches after a write. */
 export function useTracking() {

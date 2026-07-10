@@ -146,6 +146,28 @@ export type AdminUser = {
   pushSubscriptions: number
 }
 
+export type AdminUserSort = 'username' | 'email' | 'createdAt' | 'lastSeenAt' | 'watchEvents' | 'follows'
+export type AdminUserStatus = 'all' | 'ok' | 'unverified' | 'blocked'
+export type AdminUserRole = 'all' | 'admin' | 'user'
+
+export type AdminUsersQuery = {
+  page: number
+  pageSize: number
+  sort: AdminUserSort
+  dir: 'asc' | 'desc'
+  search: string
+  status: AdminUserStatus
+  role: AdminUserRole
+}
+
+export type AdminUsersPage = {
+  users: AdminUser[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
 export type AdminMetrics = {
   latency: { p50: number; p95: number; p99: number; window: string }
   throughput: {

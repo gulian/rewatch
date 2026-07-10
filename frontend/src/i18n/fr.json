@@ -315,7 +315,21 @@
     "actVerify": "vérifier",
     "actReset": "lien reset",
     "actDelete": "supprimer",
-    "deleteConfirm": "Supprimer définitivement « {{username}} » et tout son historique ?"
+    "deleteConfirm": "Supprimer définitivement « {{username}} » et tout son historique ?",
+    "searchPlaceholder": "rechercher…",
+    "filterAll": "tous",
+    "filterOk": "ok",
+    "filterUnverified": "non vérifiés",
+    "filterBlocked": "bloqués",
+    "roleAdmin": "admins",
+    "roleUser": "membres",
+    "colUser": "compte",
+    "colEmail": "email",
+    "colEvents": "events",
+    "colLastSeen": "dernière connexion",
+    "perPage": "par page",
+    "pageOf": "{{from}}–{{to}} sur {{total}}",
+    "noUsers": "aucun compte"
   },
   "ops": {
     "settings": "Réglages",

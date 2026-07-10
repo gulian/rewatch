@@ -6,9 +6,30 @@ import { prisma } from '../lib/prisma.js'
 import { Prisma } from '../generated/prisma/client.js'
 import { createAuthToken } from '../lib/auth-tokens.js'
 import { sendResetEmail, sendVerificationEmail, type Lang } from '../lib/mailer.js'
-import { isBlocked, verifyDeadline } from '../lib/verification.js'
+import { isBlocked, verifyDeadline, VERIFY_GRACE_MS } from '../lib/verification.js'
 
 const idParam = z.object({ id: z.coerce.number().int().positive() })
+
+// Filtering / sorting / pagination for the accounts table — all server-side.
+const usersQuery = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(200).default(25),
+  sort: z.enum(['username', 'email', 'createdAt', 'lastSeenAt', 'watchEvents', 'follows']).default('createdAt'),
+  dir: z.enum(['asc', 'desc']).default('desc'),
+  search: z.string().trim().max(120).optional(),
+  status: z.enum(['all', 'ok', 'unverified', 'blocked']).default('all'),
+  role: z.enum(['all', 'admin', 'user']).default('all'),
+})
+
+// Whitelist: sort keys → SQL expressions (never interpolate raw user input).
+const USER_SORT_COLUMNS: Record<z.infer<typeof usersQuery>['sort'], string> = {
+  username: 'u.username',
+  email: 'u.email',
+  createdAt: 'u.created_at',
+  lastSeenAt: 'last_seen_at',
+  watchEvents: 'watch_events',
+  follows: 'follows_count',
+}
 
 export default async function adminRoutes(app: FastifyInstance) {
   // Live telemetry — polled every few seconds by the admin console.
@@ -68,39 +89,97 @@ export default async function adminRoutes(app: FastifyInstance) {
     }
   })
 
-  app.get('/api/admin/users', { preHandler: app.requireAdmin }, async () => {
-    const users = await prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        emailVerifiedAt: true,
-        language: true,
-        isAdmin: true,
-        createdAt: true,
-        _count: { select: { watchEvents: true, follows: true, pushSubscriptions: true } },
-      },
-    })
-    // Last login proxy: most recent session creation per user.
-    const lastSeen = await prisma.session.groupBy({ by: ['userId'], _max: { createdAt: true } })
-    const seenById = new Map(lastSeen.map((s) => [s.userId, s._max.createdAt]))
+  // Paginated accounts table. Filtering, sorting and pagination all run in SQL:
+  // last-seen ordering and per-user counts are relation aggregates Prisma's query
+  // builder can't order by, so the list is a single raw query (+ a count for the total).
+  app.get('/api/admin/users', { preHandler: app.requireAdmin }, async (request, reply) => {
+    const parsed = usersQuery.safeParse(request.query)
+    if (!parsed.success) return reply.code(400).send({ error: 'invalid_query' })
+    const { page, pageSize, sort, dir, search, status, role } = parsed.data
 
-    return users.map((u) => ({
-      id: u.id,
-      username: u.username,
-      email: u.email,
-      emailVerified: u.emailVerifiedAt !== null,
-      blocked: isBlocked(u),
-      verifyDeadline: verifyDeadline(u),
-      language: u.language,
-      isAdmin: u.isAdmin,
-      createdAt: u.createdAt,
-      lastSeenAt: seenById.get(u.id) ?? null,
-      watchEvents: u._count.watchEvents,
-      follows: u._count.follows,
-      pushSubscriptions: u._count.pushSubscriptions,
-    }))
+    // "unverified" = still within the grace window; "blocked" = grace expired.
+    // Cutoff computed from the same constant the policy uses (no interval drift).
+    const graceCutoff = new Date(Date.now() - VERIFY_GRACE_MS)
+    const conds: Prisma.Sql[] = []
+    if (search) {
+      const like = `%${search}%`
+      conds.push(Prisma.sql`(u.username ILIKE ${like} OR u.email ILIKE ${like})`)
+    }
+    if (status === 'ok') conds.push(Prisma.sql`u.email_verified_at IS NOT NULL`)
+    else if (status === 'unverified')
+      conds.push(Prisma.sql`u.email_verified_at IS NULL AND u.created_at >= ${graceCutoff}`)
+    else if (status === 'blocked')
+      conds.push(Prisma.sql`u.email_verified_at IS NULL AND u.created_at < ${graceCutoff}`)
+    if (role === 'admin') conds.push(Prisma.sql`u.is_admin = true`)
+    else if (role === 'user') conds.push(Prisma.sql`u.is_admin = false`)
+    const where = conds.length ? Prisma.sql`WHERE ${Prisma.join(conds, ' AND ')}` : Prisma.empty
+
+    // sort/dir come from validated whitelists → safe to inline.
+    const orderBy = Prisma.raw(
+      `ORDER BY ${USER_SORT_COLUMNS[sort]} ${dir === 'asc' ? 'ASC' : 'DESC'} NULLS LAST, u.id ASC`,
+    )
+
+    const rows = await prisma.$queryRaw<
+      {
+        id: number
+        username: string
+        email: string | null
+        email_verified_at: Date | null
+        language: string
+        is_admin: boolean
+        created_at: Date
+        last_seen_at: Date | null
+        watch_events: number
+        follows_count: number
+        push_subscriptions: number
+      }[]
+    >(Prisma.sql`
+      SELECT u.id, u.username, u.email, u.email_verified_at, u.language, u.is_admin, u.created_at,
+        ls.last_seen_at,
+        COALESCE(we.cnt, 0)::int AS watch_events,
+        COALESCE(fo.cnt, 0)::int AS follows_count,
+        COALESCE(ps.cnt, 0)::int AS push_subscriptions
+      FROM users u
+      LEFT JOIN (
+        SELECT user_id, max(COALESCE(last_used_at, created_at)) AS last_seen_at FROM sessions GROUP BY user_id
+      ) ls ON ls.user_id = u.id
+      LEFT JOIN (SELECT user_id, count(*) AS cnt FROM watch_events GROUP BY user_id) we ON we.user_id = u.id
+      LEFT JOIN (SELECT user_id, count(*) AS cnt FROM follows GROUP BY user_id) fo ON fo.user_id = u.id
+      LEFT JOIN (SELECT user_id, count(*) AS cnt FROM push_subscriptions GROUP BY user_id) ps ON ps.user_id = u.id
+      ${where}
+      ${orderBy}
+      LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
+    `)
+
+    const totalRow = await prisma.$queryRaw<{ count: bigint }[]>(
+      Prisma.sql`SELECT count(*) AS count FROM users u ${where}`,
+    )
+    const total = Number(totalRow[0]?.count ?? 0)
+
+    return {
+      users: rows.map((u) => {
+        const vu = { emailVerifiedAt: u.email_verified_at, createdAt: u.created_at }
+        return {
+          id: u.id,
+          username: u.username,
+          email: u.email,
+          emailVerified: u.email_verified_at !== null,
+          blocked: isBlocked(vu),
+          verifyDeadline: verifyDeadline(vu),
+          language: u.language,
+          isAdmin: u.is_admin,
+          createdAt: u.created_at,
+          lastSeenAt: u.last_seen_at,
+          watchEvents: u.watch_events,
+          follows: u.follows_count,
+          pushSubscriptions: u.push_subscriptions,
+        }
+      }),
+      total,
+      page,
+      pageSize,
+      totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    }
   })
 
   // Resend the verification email to a user stuck without it.

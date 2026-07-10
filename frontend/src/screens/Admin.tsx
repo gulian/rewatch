@@ -2,14 +2,14 @@
 // neutral carbon, hairline grid, sharp corners, mono numerals, one phosphor
 // accent, 5s live polling. Extend by adding <Panel> blocks; the /api/admin/
 // metrics payload is designed to grow.
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PullToRefresh from '../components/PullToRefresh'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { api, ApiError } from '../api/client'
 import { useAdminOverview, useAdminUsers, useMe } from '../api/hooks'
-import type { AdminMetrics, AdminUser } from '../api/types'
+import type { AdminMetrics, AdminUser, AdminUserRole, AdminUserSort, AdminUserStatus } from '../api/types'
 import { frDate } from '../lib/format'
 import { SettingsPanel } from './OpsSettings'
 
@@ -129,7 +129,14 @@ function AccountRow({ user, self }: { user: AdminUser; self: boolean }) {
         <span className="hidden text-right text-[11px] tabular-nums text-[var(--ops-muted)] sm:block">
           {user.watchEvents.toLocaleString()}
         </span>
-        <span className="text-right text-[11px] tabular-nums text-[var(--ops-dim)]">
+        <span
+          className="text-right text-[11px] tabular-nums text-[var(--ops-dim)]"
+          title={
+            user.lastSeenAt
+              ? frDate(user.lastSeenAt, { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+              : undefined
+          }
+        >
           {user.lastSeenAt ? frDate(user.lastSeenAt, { day: 'numeric', month: 'short' }) : t('admin.never')}
         </span>
         <span className="text-[10px] text-[var(--ops-dim)]">{open ? '−' : '+'}</span>
@@ -174,6 +181,213 @@ function AccountRow({ user, self }: { user: AdminUser; self: boolean }) {
   )
 }
 
+// ——— Accounts table (server-side filter / sort / pagination) ———
+
+const PAGE_SIZES = [10, 25, 50, 100]
+
+function Segment<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T
+  options: { v: T; label: string }[]
+  onChange: (v: T) => void
+}) {
+  return (
+    <div className="flex border border-[var(--ops-line)]">
+      {options.map((o, i) => (
+        <button
+          key={o.v}
+          type="button"
+          onClick={() => onChange(o.v)}
+          className={`px-2.5 py-1 text-[10px] tracking-[0.08em] uppercase transition-colors ${
+            i > 0 ? 'border-l border-[var(--ops-line)]' : ''
+          } ${
+            value === o.v
+              ? 'bg-[var(--ops-accent)]/15 text-[var(--ops-accent)]'
+              : 'text-[var(--ops-dim)] hover:text-[var(--ops-text)]'
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function Th({
+  label,
+  col,
+  sort,
+  dir,
+  onSort,
+  className,
+}: {
+  label: string
+  col: AdminUserSort
+  sort: AdminUserSort
+  dir: 'asc' | 'desc'
+  onSort: (c: AdminUserSort) => void
+  className?: string
+}) {
+  const active = sort === col
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(col)}
+      className={`flex items-center gap-1 text-[10px] tracking-[0.1em] uppercase transition-colors ${
+        active ? 'text-[var(--ops-muted)]' : 'text-[var(--ops-dim)] hover:text-[var(--ops-muted)]'
+      } ${className ?? ''}`}
+    >
+      <span className="truncate">{label}</span>
+      <span className="text-[8px] leading-none">{active ? (dir === 'asc' ? '▲' : '▼') : ''}</span>
+    </button>
+  )
+}
+
+function AccountsPanel({ meId }: { meId?: number }) {
+  const { t } = useTranslation()
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(25)
+  const [sort, setSort] = useState<AdminUserSort>('createdAt')
+  const [dir, setDir] = useState<'asc' | 'desc'>('desc')
+  const [status, setStatus] = useState<AdminUserStatus>('all')
+  const [role, setRole] = useState<AdminUserRole>('all')
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+
+  // Debounce the text field so every keystroke doesn't hit the API.
+  useEffect(() => {
+    const id = setTimeout(() => setSearch(searchInput.trim()), 300)
+    return () => clearTimeout(id)
+  }, [searchInput])
+
+  // Any filter/sort change sends us back to the first page.
+  useEffect(() => {
+    setPage(1)
+  }, [search, status, role, pageSize, sort, dir])
+
+  const { data, isLoading } = useAdminUsers({ page, pageSize, sort, dir, search, status, role })
+  const users = data?.users ?? []
+  const total = data?.total ?? 0
+  const totalPages = data?.totalPages ?? 1
+
+  const onSort = (col: AdminUserSort) => {
+    if (col === sort) setDir(dir === 'asc' ? 'desc' : 'asc')
+    else {
+      setSort(col)
+      setDir(col === 'username' || col === 'email' ? 'asc' : 'desc')
+    }
+  }
+
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1
+  const to = Math.min(total, page * pageSize)
+
+  const pager =
+    'border border-[var(--ops-line)] px-3 py-1 text-[13px] leading-none text-[var(--ops-muted)] transition-colors hover:text-[var(--ops-text)] hover:border-[var(--ops-muted)] disabled:cursor-not-allowed disabled:text-[var(--ops-line)] disabled:hover:border-[var(--ops-line)]'
+
+  return (
+    <Panel title={t('admin.accounts')} aside={String(total)}>
+      {/* Filters */}
+      <div className="flex flex-col gap-2 px-4 pt-1 pb-3 sm:flex-row sm:items-center sm:justify-between lg:px-6">
+        <input
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder={t('admin.searchPlaceholder')}
+          className="w-full border border-[var(--ops-line)] bg-transparent px-2.5 py-1.5 text-[12px] text-[var(--ops-text)] placeholder:text-[var(--ops-dim)] focus:border-[var(--ops-muted)] focus:outline-none sm:w-56"
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Segment
+            value={status}
+            onChange={setStatus}
+            options={[
+              { v: 'all', label: t('admin.filterAll') },
+              { v: 'ok', label: t('admin.filterOk') },
+              { v: 'unverified', label: t('admin.filterUnverified') },
+              { v: 'blocked', label: t('admin.filterBlocked') },
+            ]}
+          />
+          <Segment
+            value={role}
+            onChange={setRole}
+            options={[
+              { v: 'all', label: t('admin.filterAll') },
+              { v: 'admin', label: t('admin.roleAdmin') },
+              { v: 'user', label: t('admin.roleUser') },
+            ]}
+          />
+        </div>
+      </div>
+
+      {/* Sortable header */}
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_1.25rem] items-center gap-x-4 border-t border-[var(--ops-line)] px-4 py-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_5rem_4.5rem_1.25rem] lg:px-6">
+        <Th label={t('admin.colUser')} col="username" sort={sort} dir={dir} onSort={onSort} />
+        <Th label={t('admin.colEmail')} col="email" sort={sort} dir={dir} onSort={onSort} className="hidden sm:flex" />
+        <Th
+          label={t('admin.colEvents')}
+          col="watchEvents"
+          sort={sort}
+          dir={dir}
+          onSort={onSort}
+          className="hidden justify-end sm:flex"
+        />
+        <Th
+          label={t('admin.colLastSeen')}
+          col="lastSeenAt"
+          sort={sort}
+          dir={dir}
+          onSort={onSort}
+          className="justify-end"
+        />
+        <span />
+      </div>
+
+      {/* Rows */}
+      <div>
+        {users.map((u) => (
+          <AccountRow key={u.id} user={u} self={u.id === meId} />
+        ))}
+        {!users.length && (
+          <div className="border-t border-[var(--ops-line)] px-4 py-6 text-center text-[11px] text-[var(--ops-dim)] lg:px-6">
+            {isLoading ? t('common.loading') : t('admin.noUsers')}
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex flex-col gap-3 border-t border-[var(--ops-line)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between lg:px-6">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] tracking-[0.1em] text-[var(--ops-dim)] uppercase">{t('admin.perPage')}</span>
+          <Segment
+            value={String(pageSize)}
+            onChange={(v) => setPageSize(Number(v))}
+            options={PAGE_SIZES.map((n) => ({ v: String(n), label: String(n) }))}
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] tabular-nums text-[var(--ops-muted)]">
+            {t('admin.pageOf', { from, to, total })}
+          </span>
+          <div className="flex">
+            <button type="button" className={pager} disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+              ‹
+            </button>
+            <button
+              type="button"
+              className={`${pager} border-l-0`}
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      </div>
+    </Panel>
+  )
+}
+
 // ——— Console ———
 
 export default function Admin() {
@@ -182,7 +396,6 @@ export default function Admin() {
   const { data: me } = useMe()
   const { data: metrics } = useAdminMetrics()
   const { data: overview } = useAdminOverview()
-  const { data: users } = useAdminUsers()
 
   if (me && !me.isAdmin) {
     navigate('/', { replace: true })
@@ -317,13 +530,7 @@ export default function Admin() {
       <SettingsPanel />
 
       {/* Accounts */}
-      <Panel title={t('admin.accounts')} aside={`${users?.length ?? '—'}`}>
-        <div className="pb-2">
-          {(users ?? []).map((u) => (
-            <AccountRow key={u.id} user={u} self={u.id === me?.id} />
-          ))}
-        </div>
-      </Panel>
+      <AccountsPanel meId={me?.id} />
     </div>
   )
 }

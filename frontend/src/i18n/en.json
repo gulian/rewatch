@@ -315,7 +315,21 @@
     "actVerify": "verify",
     "actReset": "reset link",
     "actDelete": "delete",
-    "deleteConfirm": "Permanently delete “{{username}}” and all their history?"
+    "deleteConfirm": "Permanently delete “{{username}}” and all their history?",
+    "searchPlaceholder": "search…",
+    "filterAll": "all",
+    "filterOk": "ok",
+    "filterUnverified": "unverified",
+    "filterBlocked": "blocked",
+    "roleAdmin": "admins",
+    "roleUser": "members",
+    "colUser": "account",
+    "colEmail": "email",
+    "colEvents": "events",
+    "colLastSeen": "last seen",
+    "perPage": "per page",
+    "pageOf": "{{from}}–{{to}} of {{total}}",
+    "noUsers": "no accounts"
   },
   "ops": {
     "settings": "Settings",
