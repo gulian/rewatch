@@ -8,7 +8,7 @@ A self-hosted tracker for TV shows and movies. Built as a home for TV Time refug
 
 Installable PWA, multi-user, English and French, dark and light themes.
 
-**Demo instance**: https://rewatch.wrks.fr — registrations open while capacity holds. For anything long-term, self-host: it's one command (see below).
+**Demo instance**: https://rewatch.fr — registrations open while capacity holds. For anything long-term, self-host: it's one command (see below).
 
 ![Up next on desktop](docs/screenshots/desktop.png)
 
