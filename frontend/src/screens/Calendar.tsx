@@ -26,7 +26,7 @@ export default function Calendar() {
       ) : (
         <div className="flex flex-col gap-5 px-4 pt-3.5 pb-4 lg:max-w-3xl lg:px-8">
           {[...groups.entries()].map(([day, eps]) => {
-            const { label, sub, today } = calendarDayLabel(new Date(day))
+            const { label, sub, today, daysUntil } = calendarDayLabel(new Date(day))
             return (
               <div key={day} className="flex flex-col gap-2.25">
                 <div className="flex items-baseline gap-2 px-1">
@@ -34,6 +34,7 @@ export default function Calendar() {
                     {label}
                   </span>
                   {sub && <span className="text-dim text-xs font-semibold">{sub}</span>}
+                  {daysUntil !== null && <span className="text-dim text-xs font-semibold">{t('calendar.daysUntil', { count: daysUntil })}</span>}
                 </div>
                 {eps.map((ep) => (
                   <Link

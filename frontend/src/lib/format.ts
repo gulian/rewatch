@@ -44,7 +44,7 @@ export const frDate = (d: string | Date, opts: Intl.DateTimeFormatOptions = { da
   new Intl.DateTimeFormat(locale(), opts).format(new Date(d))
 
 /** "Today" / "Tomorrow" / "Sunday 12 July" (+ year when different) for the calendar. */
-export function calendarDayLabel(date: Date): { label: string; sub: string; today: boolean } {
+export function calendarDayLabel(date: Date): { label: string; sub: string; today: boolean; daysUntil: number | null } {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const target = new Date(date)
@@ -57,7 +57,7 @@ export function calendarDayLabel(date: Date): { label: string; sub: string; toda
     month: 'long',
     ...(sameYear ? {} : { year: 'numeric' }),
   }).format(date)
-  if (diff === 0) return { label: i18n.t('calendar.today'), sub: full, today: true }
-  if (diff === 1) return { label: i18n.t('calendar.tomorrow'), sub: full, today: false }
-  return { label: full.charAt(0).toUpperCase() + full.slice(1), sub: '', today: false }
+  if (diff === 0) return { label: i18n.t('calendar.today'), sub: full, today: true, daysUntil: null }
+  if (diff === 1) return { label: i18n.t('calendar.tomorrow'), sub: full, today: false, daysUntil: null }
+  return { label: full.charAt(0).toUpperCase() + full.slice(1), sub: '', today: false, daysUntil: diff > 0 ? diff : null }
 }
