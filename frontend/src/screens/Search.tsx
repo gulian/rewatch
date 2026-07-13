@@ -115,6 +115,7 @@ export default function Search() {
   const { t } = useTranslation()
   const [q, setQ] = useState('')
   const [filter, setFilter] = useState<LibraryFilter>('ALL')
+  const [typeTab, setTypeTab] = useState<'shows' | 'movies'>('shows')
   const search = useSearch(q)
   const library = useLibrary()
   const { data: watchlist } = useWatchlist()
@@ -130,11 +131,32 @@ export default function Search() {
   const archivedMovies = watchlist?.archivedMovies ?? []
   const finishedShows = watched.data?.finishedShows ?? []
   const watchedMovies = watched.data?.movies ?? []
-  const showForLaterMovies = (filter === 'ALL' || filter === 'FOR_LATER') && forLaterMovies.length > 0
-  const showArchivedMovies = (filter === 'ALL' || filter === 'ARCHIVED') && archivedMovies.length > 0
-  const showFavoriteMovies = filter === 'FAVORITES' && favoriteMovies.length > 0
-  const showFinishedShows = filter === 'WATCHED' && finishedShows.length > 0
-  const showWatchedMovies = filter === 'WATCHED' && watchedMovies.length > 0
+
+  // Shows/movies counts of the current filter view. When both are present, a
+  // type tab row (same pattern as up next) replaces scrolling past one to
+  // reach the other.
+  const showsCount = filter === 'WATCHED' ? finishedShows.length : filteredLibrary.length
+  const moviesCount =
+    filter === 'ALL'
+      ? forLaterMovies.length + archivedMovies.length
+      : filter === 'FOR_LATER'
+        ? forLaterMovies.length
+        : filter === 'ARCHIVED'
+          ? archivedMovies.length
+          : filter === 'WATCHED'
+            ? watchedMovies.length
+            : filter === 'FAVORITES'
+              ? favoriteMovies.length
+              : 0
+  const hasBothTypes = showsCount > 0 && moviesCount > 0
+  const showsVisible = !hasBothTypes || typeTab === 'shows'
+  const moviesVisible = !hasBothTypes || typeTab === 'movies'
+
+  const showForLaterMovies = moviesVisible && (filter === 'ALL' || filter === 'FOR_LATER') && forLaterMovies.length > 0
+  const showArchivedMovies = moviesVisible && (filter === 'ALL' || filter === 'ARCHIVED') && archivedMovies.length > 0
+  const showFavoriteMovies = moviesVisible && filter === 'FAVORITES' && favoriteMovies.length > 0
+  const showFinishedShows = showsVisible && filter === 'WATCHED' && finishedShows.length > 0
+  const showWatchedMovies = moviesVisible && filter === 'WATCHED' && watchedMovies.length > 0
   // The library block exists as soon as there is anything in it — a movies-only
   // account must see it too, not just people following shows.
   const hasLibrary =
@@ -200,7 +222,10 @@ export default function Search() {
                   <button
                     key={key}
                     type="button"
-                    onClick={() => setFilter(key)}
+                    onClick={() => {
+                      setFilter(key)
+                      setTypeTab('shows')
+                    }}
                     className={`flex-none rounded-full border px-3.5 py-1.5 text-[12px] font-extrabold transition-colors ${
                       filter === key ? 'border-accent bg-accent text-ink' : 'text-muted border-border bg-transparent'
                     }`}
@@ -211,6 +236,23 @@ export default function Search() {
               </div>
             </>
           )}
+          {hasBothTypes && (
+            <div className="flex gap-1.5 py-0.5">
+              {(['shows', 'movies'] as const).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setTypeTab(key)}
+                  className={`flex-none rounded-full border px-3.5 py-1.5 text-[12px] font-extrabold transition-colors ${
+                    typeTab === key ? 'border-accent bg-accent text-ink' : 'text-muted border-border bg-transparent'
+                  }`}
+                >
+                  {key === 'shows' ? `${t('upnext.tabShows')} · ${showsCount}` : `${t('upnext.tabMovies')} · ${moviesCount}`}
+                </button>
+              ))}
+            </div>
+          )}
+          {showsVisible && (
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
             {filteredLibrary.map((l) => (
               <Link viewTransition key={l.show.tmdbId} to={`/show/${l.show.tmdbId}`} className="flex flex-col gap-1.5">
@@ -239,6 +281,7 @@ export default function Search() {
                 <div className="text-dim col-span-full py-8 text-center text-sm">{t('search.filterEmpty')}</div>
               )}
           </div>
+          )}
           {showFavoriteMovies && <PosterGrid title={t('search.favoriteMovies')} items={movieItems(favoriteMovies)} />}
           {showForLaterMovies && <PosterGrid title={t('search.watchlistMovies')} items={movieItems(forLaterMovies)} />}
           {showArchivedMovies && <PosterGrid title={t('search.archivedMovies')} items={movieItems(archivedMovies)} />}
