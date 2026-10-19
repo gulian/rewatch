@@ -19,12 +19,20 @@ import statsRoutes from './routes/stats.js'
 import trackingRoutes from './routes/tracking.js'
 import traktRoutes from './routes/trakt.js'
 
+// trustProxy: behind a reverse proxy the client IP comes from X-Forwarded-For.
+// Only the proxy's own hop is trusted, nginx on the same host by default.
+// Trusting every hop (the old `true`) let a client put any address in front of
+// the header and slip past the per-IP rate limits, login included. TRUST_PROXY
+// takes an address or CIDR list; `false` when the node port is exposed directly.
+function trustProxySetting(): string | boolean {
+  const value = process.env.TRUST_PROXY ?? '127.0.0.1'
+  if (value === 'false') return false
+  if (value === 'true') return '127.0.0.1'
+  return value
+}
+
 export async function buildApp() {
-  // trustProxy: behind a reverse proxy the client IP comes from X-Forwarded-For.
-  // Without it every request appears to come from the proxy and the per-IP rate
-  // limits are shared by all users. Set TRUST_PROXY=false only when the node
-  // port is exposed directly (clients could otherwise spoof the header).
-  const app = Fastify({ logger: true, trustProxy: (process.env.TRUST_PROXY ?? 'true') !== 'false' })
+  const app = Fastify({ logger: true, trustProxy: trustProxySetting() })
 
   await app.register(cookie)
   await app.register(multipart, { limits: { fileSize: 30 * 1024 * 1024, files: 1 } })
