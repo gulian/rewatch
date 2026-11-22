@@ -1,0 +1,101 @@
+version: 2
+
+# Five ecosystems: the backend and frontend npm projects, the Actions in
+# .github/workflows, the Dockerfile's base image and the images in
+# docker-compose.yml.
+#
+# Minor and patch bumps are grouped so a quiet week is one PR per ecosystem, not
+# twenty. Majors still arrive one per dependency: each needs its own reading.
+#
+# `cooldown` holds a version back for a few days after it is published. Most
+# hijacked npm releases are caught and yanked within that window. Security
+# updates ignore the cooldown.
+
+updates:
+  - package-ecosystem: npm
+    directory: /backend
+    schedule:
+      interval: "weekly"
+      day: saturday
+      time: "10:00"
+      timezone: Europe/Madrid
+    cooldown:
+      default-days: 5
+    groups:
+      # The CLI and the generated client must be on the same version, or
+      # `prisma generate` writes a client the runtime refuses to load. That
+      # holds for majors too, so this group takes every update type.
+      prisma:
+        patterns: ['prisma', '@prisma/*']
+      # @fastify/* plugins and fastify-plugin check the fastify major at
+      # registration, so a core major has to land with its plugins.
+      fastify:
+        patterns: ['fastify', 'fastify-plugin', '@fastify/*']
+      # Dependabot ranks a group that sets update-types as more specific than
+      # one that only sets patterns, so without the exclusion this group claims
+      # every package the groups above name, and their majors fall out as one
+      # unmergeable PR per package.
+      minor-and-patch:
+        update-types: [minor, patch]
+        exclude-patterns: ['prisma', '@prisma/*', 'fastify', 'fastify-plugin', '@fastify/*']
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: "weekly"
+      day: saturday
+      time: "10:00"
+      timezone: Europe/Madrid
+    cooldown:
+      default-days: 5
+    groups:
+      # react-dom peers on the exact react version.
+      react:
+        patterns: ['react', 'react-dom', '@types/react', '@types/react-dom']
+      tailwind:
+        patterns: ['tailwindcss', '@tailwindcss/*']
+      # The service worker mixes workbox-* modules; they share internals and
+      # must stay on one version.
+      workbox:
+        patterns: ['workbox-*']
+      minor-and-patch:
+        update-types: [minor, patch]
+        exclude-patterns:
+          ['react', 'react-dom', '@types/react', '@types/react-dom', 'tailwindcss', '@tailwindcss/*', 'workbox-*']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: "weekly"
+      day: saturday
+      time: "10:00"
+      timezone: Europe/Madrid
+    groups:
+      actions:
+        patterns: ['*']
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: "weekly"
+      day: saturday
+      time: "10:00"
+      timezone: Europe/Madrid
+    ignore:
+      # Both stages run node:22; a Node major is a runtime change worth doing
+      # by hand, not from a weekly bump.
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: "weekly"
+      day: saturday
+      time: "10:00"
+      timezone: Europe/Madrid
+    ignore:
+      # A Postgres major cannot read the previous major's data directory; it
+      # needs a dump/restore or pg_upgrade, so it is never a simple bump.
+      - dependency-name: postgres
+        update-types: ['version-update:semver-major']

@@ -1,0 +1,72 @@
+# Builds every pull request: backend and frontend on their own (fast, readable
+# failures), then the container image the docker workflow would publish, minus
+# the push. Dependabot PRs go through here too, so a bump that breaks the build
+# shows up red before it is merged.
+name: build
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # prisma.config.ts resolves DATABASE_URL even for `generate` — any value works.
+      DATABASE_URL: postgresql://build:build@localhost:5432/build
+    steps:
+      - uses: actions/checkout@v4
+
+      # Matches the node:22 base image in the Dockerfile.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run build
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # amd64 only: arm64 goes through QEMU and takes several times longer, and
+      # the Dockerfile has no per-arch steps for it to catch.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha
